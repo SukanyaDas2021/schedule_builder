@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // AppBar title state
   bool _isEditingTitle = false;
-  final TextEditingController _titleController = TextEditingController(text: "My Schedule");
+  final TextEditingController _titleController = TextEditingController(text: "My Daily Schedule");
 
 
   void onCheckboxChanged(int index, bool? newValue) {
@@ -156,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
           controller: _titleController,
           autofocus: true,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 20),
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.teal[900]),
           decoration: InputDecoration(
             border: InputBorder.none,
             hintText: 'Edit title',
@@ -174,9 +174,11 @@ class _HomeScreenState extends State<HomeScreen> {
             _isEditingTitle = true;
           });
         },
-        child: Text(
-          _titleController.text,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        child: Center(
+          child: Text(
+            _titleController.text,
+            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.teal[900]),
+          ),
         ),
       ),
       actions: [

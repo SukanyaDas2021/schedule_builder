@@ -42,7 +42,7 @@ class _TaskItemState extends State<TaskItem> {
   Widget build(BuildContext context) {
     return Container(
       height: 150.0,
-      padding: const EdgeInsets.fromLTRB(0,2,2,2),
+      padding: const EdgeInsets.only(right:4), //fromLTRB(0,0,4,0),
       decoration: BoxDecoration(
         color: Colors.teal[50],
         border: Border.all(
@@ -54,43 +54,44 @@ class _TaskItemState extends State<TaskItem> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               IconButton(
-                icon: Icon(
-                  Icons.highlight_remove,
-                  color: Colors.grey,
-                  size: 15,
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(
+                    Icons.remove_circle_outline,
+                    color: Colors.grey,
+                    size: 15,
+                  ),
+                  onPressed: () async {
+                      bool confirmDelete = await showDialog<bool>(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text("Delete Task"),
+                          content: Text("Are you sure you want to delete this task?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(false); // Cancel
+                              },
+                              child: const Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(true); // Confirm delete
+                              },
+                              child: const Text("Delete"),
+                            ),
+                          ],
+                        );
+                      },
+                    ) ?? false; // Return false if dialog dismissed
+                    if (confirmDelete) {
+                      widget.onDelete();
+                    }
+                  },
                 ),
-                onPressed: () async {
-                  // Show confirmation dialog
-                  bool confirmDelete = await showDialog<bool>(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text("Delete Task"),
-                        content: Text("Are you sure you want to delete this task?"),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop(false); // Cancel
-                            },
-                            child: const Text("Cancel"),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop(true); // Confirm delete
-                            },
-                            child: const Text("Delete"),
-                          ),
-                        ],
-                      );
-                    },
-                  ) ?? false; // Return false if dialog dismissed
-                  if (confirmDelete) {
-                    widget.onDelete();
-                  }
-                },
-              ),
             ],
           ),
           GestureDetector(
