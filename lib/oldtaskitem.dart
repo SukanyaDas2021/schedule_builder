@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:schedule_builder/task.dart';
 import 'package:image_picker/image_picker.dart';
-
+/*
 class TaskItem extends StatefulWidget {
   final String image;
   final String text;
@@ -43,27 +43,6 @@ class _TaskItemState extends State<TaskItem> {
     return Dismissible(
       key: UniqueKey(),
       direction: DismissDirection.endToStart,
-      confirmDismiss: (direction) async {
-        return await showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text("Delete Task"),
-              content: Text("Are you sure you want to delete this task?"),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text("Cancel"),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text("Delete"),
-                ),
-              ],
-            );
-          },
-        );
-      },
       onDismissed: (direction){
         widget.onDelete();
       },
@@ -77,7 +56,7 @@ class _TaskItemState extends State<TaskItem> {
       ),
       child: Container(
         height: 150.0,
-        padding: const EdgeInsets.only(left: 4, right: 4), //fromLTRB(0,0,4,0),
+        padding: const EdgeInsets.only(right:4), //fromLTRB(0,0,4,0),
         decoration: BoxDecoration(
           color: Colors.teal[50],
           borderRadius: BorderRadius.circular(15.0),
@@ -89,29 +68,69 @@ class _TaskItemState extends State<TaskItem> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: GestureDetector(
-                onTap: () async {
-                  final picker = ImagePicker();
-                  final pickedFile = await picker.pickImage(
-                    source: ImageSource.gallery,
-                  );
-                  if (pickedFile != null) {
-                    widget.onImageChanged(pickedFile.path);
-                  }
-                },
-                child: widget.image.isNotEmpty
-                    ? Image.file(
-                  File(widget.image),
-                  width: 130.0,
-                  height: 130.0,
-                  fit: BoxFit.cover,
-                )
-                : Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Icon(Icons.add_photo_alternate_outlined , size: 30, color: Colors.grey),
-                )
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(
+                    Icons.remove_circle_outline,
+                    color: Colors.grey,
+                    size: 15,
+                  ),
+                  onPressed: () async {
+                    bool confirmDelete = await showDialog<bool>(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text("Delete Task"),
+                          content: Text("Are you sure you want to delete this task?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(false); // Cancel
+                              },
+                              child: const Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(true); // Confirm delete
+                              },
+                              child: const Text("Delete"),
+                            ),
+                          ],
+                        );
+                      },
+                    ) ?? false; // Return false if dialog dismissed
+                    if (confirmDelete) {
+                      widget.onDelete();
+                    }
+                  },
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () async {
+                final picker = ImagePicker();
+                final pickedFile = await picker.pickImage(
+                  source: ImageSource.gallery,
+                );
+                if (pickedFile != null) {
+                  widget.onImageChanged(pickedFile.path);
+                }
+              },
+              child: widget.image.isNotEmpty
+                  ? Image.file(
+                File(widget.image),
+                width: 120.0,
+                height: 120.0,
+                fit: BoxFit.cover,
+              )
+                  : Image.asset(
+                'assets/blank_image.png',
+                width: 120.0,
+                height: 120.0,
+                fit: BoxFit.cover,
               ),
             ),
             SizedBox(width: 15.0),
@@ -173,3 +192,4 @@ class _TaskItemState extends State<TaskItem> {
     );
   }
 }
+*/

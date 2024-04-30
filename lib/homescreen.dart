@@ -13,9 +13,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _appBarImagePath = '';
-  List<Task> tasks = [
-    // Add tasks for initial screen
-  ];
+  List<Task> tasks = [];
+
   final _taskController = TextEditingController();
 
   // AppBar title state
@@ -150,37 +149,37 @@ class _HomeScreenState extends State<HomeScreen> {
     return AppBar(
       backgroundColor: Colors.teal[200],
       centerTitle: true,
-      title: _isEditingTitle
-          ? Center(
-        child: TextField(
-          controller: _titleController,
-          autofocus: true,
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.teal[900]),
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            hintText: 'Edit title',
-          ),
-          onSubmitted: (newTitle) {
-            setState(() {
-              _isEditingTitle = false;
-            });
-          },
-        ),
-      )
-          : GestureDetector(
-        onTap: () {
-          setState(() {
-            _isEditingTitle = true;
-          });
-        },
-        child: Center(
-          child: Text(
-            _titleController.text,
+      title: _isEditingTitle ?
+        Center(
+          child: TextField(
+            controller: _titleController,
+            autofocus: true,
+            textAlign: TextAlign.center,
             style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.teal[900]),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              hintText: 'Edit title',
+            ),
+            onSubmitted: (newTitle) {
+              setState(() {
+                _isEditingTitle = false;
+              });
+            },
           ),
-        ),
-      ),
+        )
+        : GestureDetector(
+            onTap: () {
+              setState(() {
+                _isEditingTitle = true;
+              });
+            },
+            child: Center(
+              child: Text(
+                _titleController.text,
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.teal[900]),
+              ),
+            ),
+          ),
       actions: [
         SizedBox(width: 10),
         GestureDetector(
