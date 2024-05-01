@@ -13,6 +13,7 @@ class TaskItem extends StatefulWidget {
   final ValueChanged<String> onImageChanged;
   final VoidCallback onDelete;
   final ValueChanged<String> onTextChanged;
+  final bool isHighlighted;
 
   TaskItem({
     required this.image,
@@ -22,6 +23,7 @@ class TaskItem extends StatefulWidget {
     required this.onImageChanged,
     required this.onDelete,
     required this.onTextChanged,
+    required this.isHighlighted,
   });
 
   @override
@@ -79,7 +81,18 @@ class _TaskItemState extends State<TaskItem> {
         height: 150.0,
         padding: const EdgeInsets.only(left: 4, right: 4), //fromLTRB(0,0,4,0),
         decoration: BoxDecoration(
-          color: Colors.teal[50],
+          boxShadow: widget.isHighlighted
+              ? [
+            BoxShadow(
+              color: Colors.deepPurple.withOpacity(0.8), // Adjust the color and opacity for the glow effect
+              spreadRadius: 5,
+              blurRadius: 10,
+              offset: Offset(0, 0), // Adjust the offset if needed
+            ),
+          ]
+              : [],
+          color: widget.isHighlighted ? Colors.green[50] : Colors.teal[50],
+          //color: Colors.teal[50],
           borderRadius: BorderRadius.circular(15.0),
           border: Border.all(
             color: Colors.grey, // Border color

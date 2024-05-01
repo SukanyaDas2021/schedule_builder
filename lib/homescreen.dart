@@ -20,11 +20,21 @@ class _HomeScreenState extends State<HomeScreen> {
   // AppBar title state
   bool _isEditingTitle = false;
   final TextEditingController _titleController = TextEditingController(text: "My Daily Schedule");
-
+  int _highlightedTaskIndex = -1;
 
   void onCheckboxChanged(int index, bool? newValue) {
     setState(() {
       tasks[index].isDone = newValue ?? false;
+      if (newValue ?? false) {
+        _highlightedTaskIndex = (index + 1 < tasks.length) ? index + 1 : -1;
+        if (_highlightedTaskIndex > -1) {
+          tasks[_highlightedTaskIndex].isHighlighted = true;
+          tasks[index].isHighlighted = false;
+        }
+        if (index == tasks.length - 1) {
+          tasks[index].isHighlighted = false;
+        }
+      }
     });
   }
 
@@ -34,6 +44,10 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         tasks.add(Task(image: '', text: taskText, isDone: false));
         _taskController.clear();
+        if (_highlightedTaskIndex == -1) {
+          _highlightedTaskIndex = 0;
+          tasks[0].isHighlighted = true;
+        }
       });
     }
     else { print("Task text cannot be empty or blank."); }
@@ -78,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView.builder(
                 itemCount: tasks.length,
                 itemBuilder: (context, index) {
+                  bool isNextTask = index < tasks.length - 1;
                   return Padding(
                     padding: const EdgeInsets.all(5.0),
                     child: TaskItem(
@@ -88,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onImageChanged: (newImage) => onImageChanged(index, newImage),
                       onDelete: () => onDeleteTask(index),
                       onTextChanged: (newText) => onTextChanged(index, newText),
+                      isHighlighted: tasks[index].isHighlighted,
                     ),
                   );
                 },
