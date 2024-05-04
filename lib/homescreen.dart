@@ -14,6 +14,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _appBarImagePath = '';
   List<Task> tasks = [];
+  bool _addingTasks = true;
 
   final _taskController = TextEditingController();
 
@@ -39,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _addNewTask(String taskText) {
+    if (!_addingTasks) return;
     String trimmedText = taskText.trim();
     if (trimmedText.isNotEmpty) {
       setState(() {
@@ -51,6 +53,40 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
     else { print("Task text cannot be empty or blank."); }
+  }
+
+  void _toggleAddingTasks() {
+    //setState(() {
+    //  _addingTasks = false; // Set to false when "Done" button is clicked
+    //});
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Confirm"),
+          content: Text("Are you sure all tasks are final?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: Text("No"),
+            ),
+            TextButton(
+              onPressed: () {
+                // Set _addingTasks to false to hide "Add new task" button
+                setState(() {
+                  _addingTasks = false;
+                });
+                Navigator.pop(context); // Close the dialog
+              },
+              child: Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void onImageChanged(int index, String newImage) {
@@ -109,53 +145,66 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      margin: EdgeInsets.fromLTRB(20, 5, 20, 20),
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 5
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white60,
-                        boxShadow: const [BoxShadow(
-                          color: Colors.grey,
-                          offset: Offset(0,0),
-                          blurRadius: 10,
-                          spreadRadius: 0,
-                        ),],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TextField(
-                        controller: _taskController,
-                        decoration: InputDecoration(
-                          hintText: 'Add new task',
-                          border: InputBorder.none,
+            _addingTasks
+            ?
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        margin: EdgeInsets.fromLTRB(20, 5, 20, 20),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 5
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white60,
+                          boxShadow: const [BoxShadow(
+                            color: Colors.grey,
+                            offset: Offset(0,0),
+                            blurRadius: 10,
+                            spreadRadius: 0,
+                          ),],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: TextField(
+                          controller: _taskController,
+                          decoration: InputDecoration(
+                            hintText: 'Add new task',
+                            border: InputBorder.none,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.only(bottom: 20, right: 20),
-                    child: ElevatedButton(
-                      child: Text('+', style: TextStyle(color: Colors.white,fontSize: 30),),
-                      onPressed: () {
-                        _addNewTask(_taskController.text);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[900],
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                        minimumSize: Size(50, 50),
-                        elevation: 10,
+                    Container(
+                      margin: EdgeInsets.only(bottom: 20, right: 20),
+                      child: ElevatedButton(
+                        child: Text('+', style: TextStyle(color: Colors.white,fontSize: 30),),
+                        onPressed: () {
+                          _addNewTask(_taskController.text);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[900],
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                          minimumSize: Size(50, 50),
+                          elevation: 10,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                  ],
+                ),
+              )
+            : SizedBox(),
+            _addingTasks
+            ?
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ElevatedButton(
+                onPressed: _toggleAddingTasks,
+                child: Text('Done'),
+                ),
+              )
+            : SizedBox(),
           ]
       ),
     );
