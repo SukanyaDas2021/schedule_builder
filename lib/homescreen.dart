@@ -147,9 +147,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             _addingTasks
             ?
-              Align(
+              Container(
+                margin: EdgeInsets.only(bottom: 30),
                 alignment: Alignment.bottomCenter,
-                child: Row(
+                child:
+                Row(
                   children: [
                     Expanded(
                       child: Container(
