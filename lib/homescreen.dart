@@ -122,6 +122,52 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _restartSchedule() {
+    setState(() {
+      // Clear all checked tasks
+      tasks.forEach((task) {
+        task.isDone = false;
+        task.isHighlighted = false;
+      });
+      // Highlight the first task item
+      if (tasks.isNotEmpty) {
+        tasks[0].isHighlighted = true;
+      }
+    });
+  }
+
+  void _clearAllTasks() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Confirm"),
+          content: Text("Are you sure you want to clear all tasks?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  tasks.clear(); // Clear all tasks
+                  _highlightedTaskIndex = -1;
+                  _addingTasks = true;
+                  _checkboxClickable = false;
+                });
+                Navigator.pop(context); // Close the dialog
+              },
+              child: Text("Clear"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _pickAppBarImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -256,37 +302,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: () {
-                          // Implement restart schedule logic
-                        },
+                        onPressed: _restartSchedule,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.lightBlue,
-                          // Background color
                           foregroundColor:
                           Colors.white,
-                          // Text color
                           minimumSize: Size(140, 30),
-                          // Set the size of the button
                           textStyle: TextStyle(
                               fontSize: 15,
-                              fontWeight: FontWeight.bold), // Text style
+                              fontWeight: FontWeight.bold),
                         ),
                         child: Text('Restart Schedule'),
                       ),
                       SizedBox(width: 15),
                       ElevatedButton(
-                        onPressed: () {
-                          // Implement clear all tasks logic
-                        },
+                        onPressed: _clearAllTasks,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red, // Background color
+                          backgroundColor: Colors.red,
                           foregroundColor:
-                          Colors.white, // Text color
+                          Colors.white,
                           minimumSize: Size(
-                              140, 30), // Set the size of the button
+                              140, 30),
                           textStyle: TextStyle(
                               fontSize: 15,
-                              fontWeight: FontWeight.bold), // Text style
+                              fontWeight: FontWeight.bold),
                         ),
                         child: Text('Clear All Tasks'),
                       ),
@@ -294,7 +333,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               )
-                  : SizedBox()          ]
+            : SizedBox()
+          ]
       ),
     );
   }
