@@ -15,6 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _appBarImagePath = '';
   List<Task> tasks = [];
   bool _addingTasks = true;
+  bool _checkboxClickable = false;
 
   final _taskController = TextEditingController();
 
@@ -23,7 +24,20 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _titleController = TextEditingController(text: "My Daily Schedule");
   int _highlightedTaskIndex = -1;
 
+  bool _showThumbsUp = false;
+  void _toggleThumbsUp() {
+    setState(() {
+      _showThumbsUp = !_showThumbsUp;
+    });
+    Future.delayed(Duration(seconds: 2), () {
+      setState(() {
+        _showThumbsUp = false;
+      });
+    });
+  }
+
   void onCheckboxChanged(int index, bool? newValue) {
+    if (!_checkboxClickable) return;
     setState(() {
       tasks[index].isDone = newValue ?? false;
       if (newValue ?? false) {
@@ -36,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
           tasks[index].isHighlighted = false;
         }
       }
+      if (_allTasksDone())  _toggleThumbsUp();
     });
   }
 
@@ -48,18 +63,17 @@ class _HomeScreenState extends State<HomeScreen> {
         _taskController.clear();
         if (_highlightedTaskIndex == -1) {
           _highlightedTaskIndex = 0;
-          tasks[0].isHighlighted = true;
         }
       });
     }
     else { print("Task text cannot be empty or blank."); }
   }
 
-  void _toggleAddingTasks() {
-    //setState(() {
-    //  _addingTasks = false; // Set to false when "Done" button is clicked
-    //});
+  bool _allTasksDone() {
+    return tasks.isNotEmpty && tasks.every((task) => task.isDone);
+  }
 
+  void _toggleAddingTasks() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -75,9 +89,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             TextButton(
               onPressed: () {
-                // Set _addingTasks to false to hide "Add new task" button
                 setState(() {
                   _addingTasks = false;
+                  _checkboxClickable = true;
+                  tasks[0].isHighlighted = true;
                 });
                 Navigator.pop(context); // Close the dialog
               },
@@ -124,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(2, 2, 2, 90),
+              padding: EdgeInsets.fromLTRB(2, 2, 2, _addingTasks ? 90 : 5),
               child: ListView.builder(
                 itemCount: tasks.length,
                 itemBuilder: (context, index) {
@@ -145,69 +160,141 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            _addingTasks
-            ?
-              Container(
-                margin: EdgeInsets.only(bottom: 30),
-                alignment: Alignment.bottomCenter,
-                child:
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        margin: EdgeInsets.fromLTRB(20, 5, 20, 20),
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 5
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white60,
-                          boxShadow: const [BoxShadow(
-                            color: Colors.grey,
-                            offset: Offset(0,0),
-                            blurRadius: 10,
-                            spreadRadius: 0,
-                          ),],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: TextField(
-                          controller: _taskController,
-                          decoration: InputDecoration(
-                            hintText: 'Add new task',
-                            border: InputBorder.none,
+            Visibility(
+                visible: _addingTasks,
+                child: Container(
+                  margin: EdgeInsets.only(bottom: 35),
+                  alignment: Alignment.bottomCenter,
+                  child:
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          margin: EdgeInsets.fromLTRB(20, 5, 20, 20),
+                          height: 50,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 5
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white60,
+                            boxShadow: const [BoxShadow(
+                              color: Colors.grey,
+                              offset: Offset(0,0),
+                              blurRadius: 10,
+                              spreadRadius: 0,
+                            ),],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: TextField(
+                            controller: _taskController,
+                            decoration: InputDecoration(
+                              hintText: 'Add new task',
+                              border: InputBorder.none,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Container(
-                      margin: EdgeInsets.only(bottom: 20, right: 20),
-                      child: ElevatedButton(
-                        child: Text('+', style: TextStyle(color: Colors.white,fontSize: 30),),
-                        onPressed: () {
-                          _addNewTask(_taskController.text);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[900],
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                          minimumSize: Size(50, 50),
-                          elevation: 10,
+                      Container(
+                        margin: EdgeInsets.only(bottom: 20, right: 20),
+                        child: ElevatedButton(
+                          child: Text('+', style: TextStyle(color: Colors.white,fontSize: 30),),
+                          onPressed: () {
+                            _addNewTask(_taskController.text);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue[900],
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                            minimumSize: Size(30, 30),
+                            elevation: 10,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              )
-            : SizedBox(),
-            _addingTasks
-            ?
+              ),
+            Visibility(
+                visible: _addingTasks,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20,4,20,2),
+                    child: ElevatedButton(
+                      onPressed: _toggleAddingTasks,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal, // Background color
+                        foregroundColor: Colors.white, // Text color
+                        minimumSize: Size(double.infinity, 40), // Stretch the button horizontally
+                        textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold), // Text style
+                      ),
+                      child: Text('Click when done!'),
+                    ),
+                  ),
+                ),
+              ),
+            Visibility(
+              visible: _showThumbsUp,
+              child: Center(
+                child: AnimatedOpacity(
+                  opacity: _showThumbsUp ? 1.0 : 0.0,
+                  duration: Duration(seconds: 1),
+                  child: Image.asset(
+                      'assets/thumbsup.png', // Replace 'thumbs_up_cartoon.png' with the actual file name of your image asset
+                      width: 200, // Adjust the width of the image as needed
+                      height: 200,
+                  ),
+                ),
+              ),
+            ),
+            _allTasksDone()
+                ?
               Align(
                 alignment: Alignment.bottomCenter,
-                child: ElevatedButton(
-                onPressed: _toggleAddingTasks,
-                child: Text('Done'),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 2, 20, 2),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          // Implement restart schedule logic
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.lightBlue,
+                          // Background color
+                          foregroundColor:
+                          Colors.white,
+                          // Text color
+                          minimumSize: Size(140, 30),
+                          // Set the size of the button
+                          textStyle: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold), // Text style
+                        ),
+                        child: Text('Restart Schedule'),
+                      ),
+                      SizedBox(width: 15),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Implement clear all tasks logic
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red, // Background color
+                          foregroundColor:
+                          Colors.white, // Text color
+                          minimumSize: Size(
+                              140, 30), // Set the size of the button
+                          textStyle: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold), // Text style
+                        ),
+                        child: Text('Clear All Tasks'),
+                      ),
+                    ],
+                  ),
                 ),
               )
-            : SizedBox(),
-          ]
+                  : SizedBox()          ]
       ),
     );
   }
