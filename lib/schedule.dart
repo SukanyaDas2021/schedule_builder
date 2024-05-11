@@ -6,12 +6,12 @@ import 'package:schedule_builder/task.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
-class HomeScreen extends StatefulWidget {
+class Schedule extends StatefulWidget {
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _ScheduleState createState() => _ScheduleState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _ScheduleState extends State<Schedule> {
   String _appBarImagePath = '';
   List<Task> tasks = [];
   bool _addingTasks = true;

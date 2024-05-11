@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:schedule_builder/homescreen.dart';
+import 'package:schedule_builder/schedule.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -8,19 +8,19 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   //const ({super.key});
-  List<String> homeScreens = [];
+  List<String> schedules = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home Page'),
+        title: Text('Schedule Page'),
         actions: [
           IconButton(
             onPressed: () {
               // Add a new HomeScreen to the list
               setState(() {
-                homeScreens.add('Home Screen ${homeScreens.length + 1}');
+                schedules.add('Schedule ${schedules.length + 1}');
               });
             },
             icon: Icon(Icons.add),
@@ -28,10 +28,10 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: ListView.builder(
-        itemCount: homeScreens.length,
+        itemCount: schedules.length,
         itemBuilder: (context, index) {
           return ListTile(
-            title: Text(homeScreens[index]),
+            title: Text(schedules[index]),
             onTap: () {
               Navigator.pushNamed(context, '/home');
             },

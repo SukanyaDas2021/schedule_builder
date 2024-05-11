@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:schedule_builder/homescreen.dart';
+import 'package:schedule_builder/schedule.dart';
 import 'package:schedule_builder/homepage.dart';
 
 void main() {
@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: HomeScreen(),
+      home: Schedule(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -26,11 +26,11 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => HomePage(),
-        '/home': (context) => HomeScreen(),
+        '/home': (context) => Schedule(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/home') {
-          return MaterialPageRoute(builder: (context) => HomeScreen());
+          return MaterialPageRoute(builder: (context) => Schedule());
         }
         return null;
       },
