@@ -16,6 +16,7 @@ class _ScheduleState extends State<Schedule> {
   List<Task> tasks = [];
   bool _addingTasks = true;
   bool _checkboxClickable = false;
+  bool _showTaskInput = false;
 
   final _taskController = TextEditingController();
 
@@ -25,9 +26,12 @@ class _ScheduleState extends State<Schedule> {
   int _highlightedTaskIndex = -1;
 
   bool _showThumbsUp = false;
+  String? _selectedImagePath;
+
   void _toggleThumbsUp() {
     setState(() {
       _showThumbsUp = !_showThumbsUp;
+      _checkboxClickable = false;
     });
     Future.delayed(Duration(seconds: 2), () {
       setState(() {
@@ -50,7 +54,8 @@ class _ScheduleState extends State<Schedule> {
           tasks[index].isHighlighted = false;
         }
       }
-      if (_allTasksDone())  _toggleThumbsUp();
+      if (_allTasksDone())
+        _toggleThumbsUp();
     });
   }
 
@@ -59,11 +64,15 @@ class _ScheduleState extends State<Schedule> {
     String trimmedText = taskText.trim();
     if (trimmedText.isNotEmpty) {
       setState(() {
-        tasks.add(Task(image: '', text: taskText, isDone: false));
+        tasks.add(Task(image: _selectedImagePath ?? '', text: taskText, isDone: false));
+        //int newIndex = tasks.length - 1;
         _taskController.clear();
+        _showTaskInput = false;  // Hide the input after adding a task
+        _selectedImagePath = null;
         if (_highlightedTaskIndex == -1) {
           _highlightedTaskIndex = 0;
         }
+        //_pickImage();
       });
     }
     else { print("Task text cannot be empty or blank."); }
@@ -93,6 +102,7 @@ class _ScheduleState extends State<Schedule> {
                   _addingTasks = false;
                   _checkboxClickable = true;
                   tasks[0].isHighlighted = true;
+                  _showTaskInput = false;
                 });
                 Navigator.pop(context); // Close the dialog
               },
@@ -129,10 +139,12 @@ class _ScheduleState extends State<Schedule> {
         task.isDone = false;
         task.isHighlighted = false;
       });
+      _addingTasks = true;
+      _checkboxClickable = false;
       // Highlight the first task item
-      if (tasks.isNotEmpty) {
-        tasks[0].isHighlighted = true;
-      }
+      //if (tasks.isNotEmpty) {
+      //  tasks[0].isHighlighted = true;
+      //}
     });
   }
 
@@ -178,208 +190,256 @@ class _ScheduleState extends State<Schedule> {
     }
   }
 
+  void _toggleTaskInput() {
+    setState(() {
+      _showTaskInput = !_showTaskInput;
+    });
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImagePath = pickedFile.path;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (bool didpop) async {
-        //moveToLastScreen();
-      },
-      child: Scaffold(
-        appBar: _buildAppBar(),
-        body: Stack(
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(2, 2, 2, _addingTasks ? 90 : 5),
-                child: ListView.builder(
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    bool isNextTask = index < tasks.length - 1;
-                    return Padding(
-                      padding: const EdgeInsets.all(5.0),
-                      child: TaskItem(
-                        image: tasks[index].image,
-                        text: tasks[index].text,
-                        isDone: tasks[index].isDone,
-                        onCheckboxChanged: (newValue) => onCheckboxChanged(index, newValue),
-                        onImageChanged: (newImage) => onImageChanged(index, newImage),
-                        onDelete: () => onDeleteTask(index),
-                        onTextChanged: (newText) => onTextChanged(index, newText),
-                        isHighlighted: tasks[index].isHighlighted,
-                      ),
-                    );
-                  },
-                ),
+    return Scaffold(
+      appBar: _buildAppBar(),
+      body: Stack(
+        children: [
+          if (tasks.isEmpty)
+            Center(
+              child: Text(
+                'No tasks in schedule!',
+                style: TextStyle(fontSize: 20, color: Colors.grey),
               ),
-              Visibility(
-                  visible: _addingTasks,
-                  child: Container(
-                    margin: EdgeInsets.only(bottom: 35),
-                    alignment: Alignment.bottomCenter,
-                    child:
+            )
+          else
+            Padding(
+              padding: EdgeInsets.fromLTRB(2, 2, 2, _addingTasks ? 120 : 5),
+              child: ListView.builder(
+                itemCount: tasks.length,
+                itemBuilder: (context, index) {
+                  //bool isNextTask = index < tasks.length - 1;
+                  return Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: TaskItem(
+                      image: tasks[index].image,
+                      text: tasks[index].text,
+                      isDone: tasks[index].isDone,
+                      onCheckboxChanged: (newValue) => onCheckboxChanged(index, newValue),
+                      onImageChanged: (newImage) => onImageChanged(index, newImage),
+                      onDelete: () => onDeleteTask(index),
+                      onTextChanged: (newText) => onTextChanged(index, newText),
+                      isHighlighted: tasks[index].isHighlighted,
+                    ),
+                  );
+                },
+              ),
+            ),
+          if (_showTaskInput)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                     Row(
                       children: [
                         Expanded(
                           child: Container(
-                            margin: EdgeInsets.fromLTRB(20, 5, 20, 20),
-                            height: 50,
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 5
-                            ),
+                            margin: EdgeInsets.only(right: 8.0),
+                            height: 80,
+                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             decoration: BoxDecoration(
                               color: Colors.white60,
-                              boxShadow: const [BoxShadow(
-                                color: Colors.grey,
-                                offset: Offset(0,0),
-                                blurRadius: 10,
-                                spreadRadius: 0,
-                              ),],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey,
+                                  offset: Offset(0, 0),
+                                  blurRadius: 10,
+                                  spreadRadius: 0,
+                                ),
+                              ],
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: TextField(
                               controller: _taskController,
                               decoration: InputDecoration(
-                                hintText: 'Add new task',
+                                hintText: 'Enter task',
                                 border: InputBorder.none,
                               ),
                             ),
                           ),
                         ),
-                        Container(
-                          margin: EdgeInsets.only(bottom: 20, right: 20),
-                          child: ElevatedButton(
-                            child: Text('+', style: TextStyle(color: Colors.white,fontSize: 30),),
-                            onPressed: () {
-                              _addNewTask(_taskController.text);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue[900],
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                              minimumSize: Size(30, 30),
-                              elevation: 10,
-                            ),
+                        SizedBox(width: 8), // Add some space between text field and buttons
+                        ElevatedButton(
+                          onPressed: () {
+                            _addNewTask(_taskController.text);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue[900],
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            minimumSize: Size(50, 80),
+                            elevation: 10,
+                          ),
+                          child: Text(
+                            '+',
+                            style: TextStyle(color: Colors.white, fontSize: 30),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-              Visibility(
-                  visible: _addingTasks,
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20,4,20,2),
-                      child: ElevatedButton(
-                        onPressed: _toggleAddingTasks,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal, // Background color
-                          foregroundColor: Colors.white, // Text color
-                          minimumSize: Size(double.infinity, 40), // Stretch the button horizontally
-                          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold), // Text style
-                        ),
-                        child: Text('Click when done!'),
+                    SizedBox(height: 8), // Add some space between text field and buttons
+                    ElevatedButton(
+                      onPressed: () {
+                        _pickImage(); // Replace _pickImage with your image picking logic
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[900],
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        minimumSize: Size(120, 40),
+                        elevation: 10,
+                      ),
+                      child: Text(
+                        'Add Image',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
-                  ),
+                    SizedBox(height: 10), // Add some space between buttons
+                  ],
                 ),
-              Visibility(
-                visible: _showThumbsUp,
-                child: Center(
-                  child: AnimatedOpacity(
-                    opacity: _showThumbsUp ? 1.0 : 0.0,
-                    duration: Duration(seconds: 1),
-                    child: Image.asset(
-                        'assets/thumbsup.png', // Replace 'thumbs_up_cartoon.png' with the actual file name of your image asset
-                        width: 200, // Adjust the width of the image as needed
-                        height: 200,
-                    ),
+              ),
+            ),
+          if (!_showTaskInput)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Visibility(
+                visible: _addingTasks,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20.0,5,20,20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ElevatedButton(
+                        onPressed: _toggleTaskInput,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          minimumSize: Size(140, 50),
+                          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                        child: Text('Add task'),
+                      ),
+                      ElevatedButton(
+                        onPressed: _toggleAddingTasks,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          foregroundColor: Colors.white,
+                          minimumSize: Size(140, 50),
+                          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                        child: Text('Click when done'),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              _allTasksDone()
-                  ?
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 2, 20, 2),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          onPressed: _restartSchedule,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.lightBlue,
-                            foregroundColor:
-                            Colors.white,
-                            minimumSize: Size(140, 30),
-                            textStyle: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          child: Text('Restart Schedule'),
-                        ),
-                        SizedBox(width: 15),
-                        ElevatedButton(
-                          onPressed: _clearAllTasks,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor:
-                            Colors.white,
-                            minimumSize: Size(
-                                140, 30),
-                            textStyle: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          child: Text('Clear All Tasks'),
-                        ),
-                      ],
+            ),
+          Visibility(
+            visible: _showThumbsUp,
+            child: Center(
+              child: AnimatedOpacity(
+                opacity: _showThumbsUp ? 1.0 : 0.0,
+                duration: Duration(seconds: 1),
+                child: Image.asset(
+                  'assets/thumbsup.png',
+                  width: 200,
+                  height: 200,
+                ),
+              ),
+            ),
+          ),
+          _allTasksDone()
+              ? Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 2, 20, 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _restartSchedule,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.lightBlue,
+                      foregroundColor: Colors.white,
+                      minimumSize: Size(140, 40),
+                      textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
+                    child: Text('Restart Schedule'),
                   ),
-                )
-              : SizedBox()
-            ]
-        ),
+                  SizedBox(width: 15),
+                  ElevatedButton(
+                    onPressed: _clearAllTasks,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      minimumSize: Size(140, 40),
+                      textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                    child: Text('Clear All Tasks'),
+                  ),
+                ],
+              ),
+            ),
+          )
+              : SizedBox(),
+        ],
       ),
     );
   }
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.teal[200],
+      backgroundColor: Colors.purple[100],
       centerTitle: true,
-      title: _isEditingTitle ?
-        Center(
-          child: TextField(
-            controller: _titleController,
-            autofocus: true,
-            textAlign: TextAlign.center,
+      title: _isEditingTitle
+          ? Center(
+        child: TextField(
+          controller: _titleController,
+          autofocus: true,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.teal[900]),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            hintText: 'Edit title',
+          ),
+          onSubmitted: (newTitle) {
+            setState(() {
+              _isEditingTitle = false;
+            });
+          },
+        ),
+      )
+          : GestureDetector(
+        onTap: () {
+          setState(() {
+            _isEditingTitle = true;
+          });
+        },
+        child: Center(
+          child: Text(
+            _titleController.text,
             style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.teal[900]),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: 'Edit title',
-            ),
-            onSubmitted: (newTitle) {
-              setState(() {
-                _isEditingTitle = false;
-              });
-            },
           ),
-        )
-        : GestureDetector(
-            onTap: () {
-              setState(() {
-                _isEditingTitle = true;
-              });
-            },
-            child: Center(
-              child: Text(
-                _titleController.text,
-                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.teal[900]),
-              ),
-            ),
-          ),
+        ),
+      ),
       actions: [
         SizedBox(width: 10),
         GestureDetector(
@@ -402,13 +462,6 @@ class _ScheduleState extends State<Schedule> {
           ),
         ),
       ],
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back),
-        onPressed: (){
-          //moveToLastScreen();
-        },
-      ),
-
     );
   }
 }

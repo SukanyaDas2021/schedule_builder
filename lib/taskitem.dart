@@ -91,7 +91,7 @@ class _TaskItemState extends State<TaskItem> {
             ),
           ]
               : [],
-          color: widget.isHighlighted ? Colors.green[50] : Colors.teal[50],
+          color: widget.isHighlighted ? Colors.white : Colors.purple[50],
           //color: Colors.teal[50],
           borderRadius: BorderRadius.circular(15.0),
           border: Border.all(
