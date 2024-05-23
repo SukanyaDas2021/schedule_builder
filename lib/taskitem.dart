@@ -14,6 +14,7 @@ class TaskItem extends StatefulWidget {
   final VoidCallback onDelete;
   final ValueChanged<String> onTextChanged;
   final bool isHighlighted;
+  final bool isEditable;
 
   TaskItem({
     required this.image,
@@ -24,6 +25,7 @@ class TaskItem extends StatefulWidget {
     required this.onDelete,
     required this.onTextChanged,
     required this.isHighlighted,
+    required this.isEditable,
   });
 
   @override
@@ -44,7 +46,7 @@ class _TaskItemState extends State<TaskItem> {
   Widget build(BuildContext context) {
     return Dismissible(
       key: UniqueKey(),
-      direction: DismissDirection.endToStart,
+      direction: widget.isEditable ? DismissDirection.endToStart : DismissDirection.none,
       confirmDismiss: (direction) async {
         return await showDialog(
           context: context,
@@ -91,7 +93,7 @@ class _TaskItemState extends State<TaskItem> {
             ),
           ]
               : [],
-          color: widget.isHighlighted ? Colors.white : Colors.purple[50],
+          color: widget.isHighlighted ? Colors.white : Colors.blue[50],
           //color: Colors.teal[50],
           borderRadius: BorderRadius.circular(15.0),
           border: Border.all(
@@ -105,15 +107,17 @@ class _TaskItemState extends State<TaskItem> {
             Padding(
               padding: const EdgeInsets.all(4.0),
               child: GestureDetector(
-                onTap: () async {
-                  final picker = ImagePicker();
-                  final pickedFile = await picker.pickImage(
-                    source: ImageSource.gallery,
-                  );
-                  if (pickedFile != null) {
-                    widget.onImageChanged(pickedFile.path);
+                onTap: widget.isEditable
+                    ? () async {
+                    final picker = ImagePicker();
+                    final pickedFile = await picker.pickImage(
+                      source: ImageSource.gallery,
+                    );
+                    if (pickedFile != null) {
+                      widget.onImageChanged(pickedFile.path);
+                    }
                   }
-                },
+                  : null,
                 child: widget.image.isNotEmpty
                     ? Image.file(
                   File(widget.image),
@@ -130,14 +134,16 @@ class _TaskItemState extends State<TaskItem> {
             SizedBox(width: 15.0),
             Expanded(
               child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    isEditing = true;
-                  });
-                },
+                onTap: widget.isEditable
+                    ? () {
+                    setState(() {
+                      isEditing = true;
+                    });
+                  }
+                  : null,
                 child: Padding(
                   padding: const EdgeInsets.all(3.0),
-                  child: isEditing
+                  child: isEditing  && widget.isEditable
                       ? TextField(
                     controller: _taskTextController,
                     autofocus: true,
@@ -145,7 +151,7 @@ class _TaskItemState extends State<TaskItem> {
                       border: InputBorder.none,
                     ),
                     style: TextStyle(
-                      fontSize: 25.0,
+                      fontSize: 22.0,
                       fontWeight: FontWeight.bold,
                       decoration: widget.isDone ? TextDecoration.lineThrough : null,
                     ),
@@ -161,7 +167,7 @@ class _TaskItemState extends State<TaskItem> {
                     child: Text(
                       widget.text,
                       style: TextStyle(
-                        fontSize: 25.0,
+                        fontSize: 22.0,
                         fontWeight: FontWeight.bold,
                         decoration: widget.isDone? TextDecoration.lineThrough : null,
                       ),
@@ -172,7 +178,7 @@ class _TaskItemState extends State<TaskItem> {
             ),
             SizedBox(width: 10.0),
             Transform.scale(
-              scale: 2,
+              scale: 1,
               child: Checkbox(
                 value: widget.isDone,
                 onChanged: widget.onCheckboxChanged,

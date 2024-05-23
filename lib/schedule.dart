@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:schedule_builder/taskitem.dart';
 import 'package:schedule_builder/task.dart';
+import 'package:schedule_builder/database_helper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
@@ -12,6 +13,7 @@ class Schedule extends StatefulWidget {
 }
 
 class _ScheduleState extends State<Schedule> {
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
   String _appBarImagePath = '';
   List<Task> tasks = [];
   bool _addingTasks = true;
@@ -22,7 +24,7 @@ class _ScheduleState extends State<Schedule> {
 
   // AppBar title state
   bool _isEditingTitle = false;
-  final TextEditingController _titleController = TextEditingController(text: "My Daily Schedule");
+  final TextEditingController _titleController = TextEditingController(text: "My Schedule");
   int _highlightedTaskIndex = -1;
 
   bool _showThumbsUp = false;
@@ -232,6 +234,7 @@ class _ScheduleState extends State<Schedule> {
                       image: tasks[index].image,
                       text: tasks[index].text,
                       isDone: tasks[index].isDone,
+                      isEditable: _addingTasks,
                       onCheckboxChanged: (newValue) => onCheckboxChanged(index, newValue),
                       onImageChanged: (newImage) => onImageChanged(index, newImage),
                       onDelete: () => onDeleteTask(index),
@@ -269,11 +272,15 @@ class _ScheduleState extends State<Schedule> {
                               ],
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: TextField(
-                              controller: _taskController,
-                              decoration: InputDecoration(
-                                hintText: 'Enter task',
-                                border: InputBorder.none,
+                            child: Padding(
+                              padding: const EdgeInsets.all(5.0),
+                              child: TextField(
+                                controller: _taskController,
+                                decoration: InputDecoration(
+                                  hintText: 'Enter Task',
+                                  border: InputBorder.none,
+                                  hintStyle: TextStyle(fontSize: 18)
+                                ),
                               ),
                             ),
                           ),
@@ -325,7 +332,7 @@ class _ScheduleState extends State<Schedule> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20.0,5,20,20),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
                         onPressed: _toggleTaskInput,
@@ -333,19 +340,20 @@ class _ScheduleState extends State<Schedule> {
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
                           minimumSize: Size(140, 50),
-                          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: HttpHeaders.rangeHeader),
                         ),
-                        child: Text('Add task'),
+                        child: Text('Add/Edit Tasks'),
                       ),
+                      SizedBox(width: 15,),
                       ElevatedButton(
                         onPressed: _toggleAddingTasks,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
+                          backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
-                          minimumSize: Size(140, 50),
-                          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          minimumSize: Size(150, 50),
+                          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        child: Text('Click when done'),
+                        child: Text('Submit'),
                       ),
                     ],
                   ),
@@ -407,15 +415,15 @@ class _ScheduleState extends State<Schedule> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.purple[100],
+      backgroundColor: Colors.blue[700],
       centerTitle: true,
-      title: _isEditingTitle
+      title: _isEditingTitle && _addingTasks
           ? Center(
         child: TextField(
           controller: _titleController,
           autofocus: true,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.teal[900]),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
           decoration: InputDecoration(
             border: InputBorder.none,
             hintText: 'Edit title',
@@ -429,34 +437,42 @@ class _ScheduleState extends State<Schedule> {
       )
           : GestureDetector(
         onTap: () {
-          setState(() {
-            _isEditingTitle = true;
-          });
+          if (_addingTasks) {
+            setState(() {
+              _isEditingTitle = true;
+            });
+          }
         },
         child: Center(
           child: Text(
             _titleController.text,
-            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.teal[900]),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
       ),
       actions: [
         SizedBox(width: 10),
-        GestureDetector(
-          onTap: _pickAppBarImage,
-          child: Container(
-            height: 60,
-            width: 60,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: _appBarImagePath.isNotEmpty
-                  ? Image.file(
-                File(_appBarImagePath),
-                fit: BoxFit.cover,
-              )
-                  : Image.asset(
-                'assets/blank_image.png',
-                fit: BoxFit.cover,
+        Padding(
+          padding: const EdgeInsets.only(right: 5.0, bottom: 5),
+          child: GestureDetector(
+            onTap: () {
+              if (_addingTasks)
+                _pickAppBarImage();
+              },
+            child: Container(
+              height: 60,
+              width: 60,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: _appBarImagePath.isNotEmpty
+                    ? Image.file(
+                  File(_appBarImagePath),
+                  fit: BoxFit.cover,
+                )
+                    : Image.asset(
+                  'assets/blank_image.png',
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
