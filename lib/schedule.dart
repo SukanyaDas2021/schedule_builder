@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:schedule_builder/taskitem.dart';
@@ -35,10 +34,27 @@ class _ScheduleState extends State<Schedule> {
       _showThumbsUp = !_showThumbsUp;
       _checkboxClickable = false;
     });
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () {
       setState(() {
         _showThumbsUp = false;
       });
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  Future<void> _loadTasks() async {
+    final loadedTasks = await _databaseHelper.getTasks();
+    setState(() {
+      tasks = loadedTasks;
+      if (tasks.isNotEmpty) {
+        _highlightedTaskIndex = tasks.indexWhere((task) => task.isHighlighted);
+        _checkboxClickable = !_addingTasks;
+      }
     });
   }
 
@@ -56,8 +72,9 @@ class _ScheduleState extends State<Schedule> {
           tasks[index].isHighlighted = false;
         }
       }
-      if (_allTasksDone())
+      if (_allTasksDone()) {
         _toggleThumbsUp();
+      }
     });
   }
 
@@ -65,8 +82,9 @@ class _ScheduleState extends State<Schedule> {
     if (!_addingTasks) return;
     String trimmedText = taskText.trim();
     if (trimmedText.isNotEmpty) {
+      final newTask = Task(image: _selectedImagePath ?? '', text: taskText, isDone: false);
       setState(() {
-        tasks.add(Task(image: _selectedImagePath ?? '', text: taskText, isDone: false));
+        tasks.add(newTask);
         //int newIndex = tasks.length - 1;
         _taskController.clear();
         _showTaskInput = false;  // Hide the input after adding a task
@@ -76,6 +94,7 @@ class _ScheduleState extends State<Schedule> {
         }
         //_pickImage();
       });
+      _databaseHelper.insertTask(newTask);
     }
     else { print("Task text cannot be empty or blank."); }
   }
@@ -89,14 +108,14 @@ class _ScheduleState extends State<Schedule> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Confirm"),
-          content: Text("Are you sure all tasks are final?"),
+          title: const Text("Confirm"),
+          content: const Text("Are you sure all tasks are final?"),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close the dialog
               },
-              child: Text("No"),
+              child: const Text("No"),
             ),
             TextButton(
               onPressed: () {
@@ -108,7 +127,7 @@ class _ScheduleState extends State<Schedule> {
                 });
                 Navigator.pop(context); // Close the dialog
               },
-              child: Text("Yes"),
+              child: const Text("Yes"),
             ),
           ],
         );
@@ -120,18 +139,24 @@ class _ScheduleState extends State<Schedule> {
     setState(() {
       tasks[index].image = newImage;
     });
+    _databaseHelper.updateTask(tasks[index]);
   }
 
   void onDeleteTask(int index) {
     setState(() {
       tasks.removeAt(index);
     });
+    _databaseHelper.deleteAllTasks(); // Clear all tasks and reinsert remaining ones
+    for (var task in tasks) {
+      _databaseHelper.insertTask(task);
+    }
   }
 
   void onTextChanged(int index, String newText) {
     setState(() {
       tasks[index].text = newText;
     });
+    _databaseHelper.updateTask(tasks[index]);
   }
 
   void _restartSchedule() {
@@ -148,6 +173,10 @@ class _ScheduleState extends State<Schedule> {
       //  tasks[0].isHighlighted = true;
       //}
     });
+    _databaseHelper.deleteAllTasks();
+    for (var task in tasks) {
+      _databaseHelper.insertTask(task);
+    }
   }
 
   void _clearAllTasks() {
@@ -155,14 +184,14 @@ class _ScheduleState extends State<Schedule> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Confirm"),
-          content: Text("Are you sure you want to clear all tasks?"),
+          title: const Text("Confirm"),
+          content: const Text("Are you sure you want to clear all tasks?"),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context); // Close the dialog
               },
-              child: Text("Cancel"),
+              child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
@@ -172,9 +201,10 @@ class _ScheduleState extends State<Schedule> {
                   _addingTasks = true;
                   _checkboxClickable = false;
                 });
+                _databaseHelper.deleteAllTasks();
                 Navigator.pop(context); // Close the dialog
               },
-              child: Text("Clear"),
+              child: const Text("Clear"),
             ),
           ],
         );
@@ -215,7 +245,7 @@ class _ScheduleState extends State<Schedule> {
       body: Stack(
         children: [
           if (tasks.isEmpty)
-            Center(
+            const Center(
               child: Text(
                 'No tasks in schedule!',
                 style: TextStyle(fontSize: 20, color: Colors.grey),
@@ -227,7 +257,6 @@ class _ScheduleState extends State<Schedule> {
               child: ListView.builder(
                 itemCount: tasks.length,
                 itemBuilder: (context, index) {
-                  //bool isNextTask = index < tasks.length - 1;
                   return Padding(
                     padding: const EdgeInsets.all(5.0),
                     child: TaskItem(
@@ -257,13 +286,13 @@ class _ScheduleState extends State<Schedule> {
                       children: [
                         Expanded(
                           child: Container(
-                            margin: EdgeInsets.only(right: 8.0),
+                            margin: const EdgeInsets.only(right: 8.0),
                             height: 80,
-                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                             decoration: BoxDecoration(
                               color: Colors.white60,
                               boxShadow: [
-                                BoxShadow(
+                                const BoxShadow(
                                   color: Colors.grey,
                                   offset: Offset(0, 0),
                                   blurRadius: 10,
@@ -276,8 +305,8 @@ class _ScheduleState extends State<Schedule> {
                               padding: const EdgeInsets.all(5.0),
                               child: TextField(
                                 controller: _taskController,
-                                decoration: InputDecoration(
-                                  hintText: 'Enter Task',
+                                decoration: const InputDecoration(
+                                  hintText: 'Enter a Task',
                                   border: InputBorder.none,
                                   hintStyle: TextStyle(fontSize: 18)
                                 ),
@@ -285,7 +314,7 @@ class _ScheduleState extends State<Schedule> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 8), // Add some space between text field and buttons
+                        const SizedBox(width: 8), // Add some space between text field and buttons
                         ElevatedButton(
                           onPressed: () {
                             _addNewTask(_taskController.text);
@@ -293,33 +322,51 @@ class _ScheduleState extends State<Schedule> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue[900],
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            minimumSize: Size(50, 80),
+                            minimumSize: const Size(50, 80),
                             elevation: 10,
                           ),
-                          child: Text(
+                          child: const Text(
                             '+',
                             style: TextStyle(color: Colors.white, fontSize: 30),
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 8), // Add some space between text field and buttons
-                    ElevatedButton(
-                      onPressed: () {
-                        _pickImage(); // Replace _pickImage with your image picking logic
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[900],
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        minimumSize: Size(120, 40),
-                        elevation: 10,
-                      ),
-                      child: Text(
-                        'Add Image',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
+                    const SizedBox(height: 8), // Add some space between text field and buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            _pickImage(); // Replace _pickImage with your image picking logic
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue[900],
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            minimumSize: const Size(120, 50),
+                            elevation: 10,
+                          ),
+                          child: const Text(
+                            'Add Image',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ),
+                        if (_selectedImagePath != null)
+                          Container(
+                            width: 50,
+                            height: 50,
+                            margin: EdgeInsets.only(left: 8.0),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              image: DecorationImage(
+                                image: FileImage(File(_selectedImagePath!)),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                    SizedBox(height: 10), // Add some space between buttons
+                    const SizedBox(height: 10), // Add some space between buttons
                   ],
                 ),
               ),
@@ -339,21 +386,21 @@ class _ScheduleState extends State<Schedule> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
-                          minimumSize: Size(140, 50),
-                          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: HttpHeaders.rangeHeader),
+                          minimumSize: const Size(140, 50),
+                          textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: HttpHeaders.rangeHeader),
                         ),
-                        child: Text('Add/Edit Tasks'),
+                        child: const Text('Add/Edit Tasks'),
                       ),
-                      SizedBox(width: 15,),
+                      const SizedBox(width: 15,),
                       ElevatedButton(
                         onPressed: _toggleAddingTasks,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
-                          minimumSize: Size(150, 50),
-                          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          minimumSize: const Size(150, 50),
+                          textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        child: Text('Submit'),
+                        child: const Text('Done'),
                       ),
                     ],
                   ),
@@ -365,7 +412,7 @@ class _ScheduleState extends State<Schedule> {
             child: Center(
               child: AnimatedOpacity(
                 opacity: _showThumbsUp ? 1.0 : 0.0,
-                duration: Duration(seconds: 1),
+                duration: const Duration(seconds: 1),
                 child: Image.asset(
                   'assets/thumbsup.png',
                   width: 200,
@@ -385,29 +432,29 @@ class _ScheduleState extends State<Schedule> {
                   ElevatedButton(
                     onPressed: _restartSchedule,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.lightBlue,
+                      backgroundColor: Colors.blueAccent,
                       foregroundColor: Colors.white,
-                      minimumSize: Size(140, 40),
-                      textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      minimumSize: const Size(140, 40),
+                      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
-                    child: Text('Restart Schedule'),
+                    child: const Text('Edit Schedule'),
                   ),
-                  SizedBox(width: 15),
+                  const SizedBox(width: 15),
                   ElevatedButton(
                     onPressed: _clearAllTasks,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
-                      minimumSize: Size(140, 40),
-                      textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      minimumSize: const Size(140, 40),
+                      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
-                    child: Text('Clear All Tasks'),
+                    child: const Text('Clear Schedule'),
                   ),
                 ],
               ),
             ),
           )
-              : SizedBox(),
+              : const SizedBox(),
         ],
       ),
     );
@@ -423,8 +470,8 @@ class _ScheduleState extends State<Schedule> {
           controller: _titleController,
           autofocus: true,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-          decoration: InputDecoration(
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+          decoration: const InputDecoration(
             border: InputBorder.none,
             hintText: 'Edit title',
           ),
@@ -446,19 +493,20 @@ class _ScheduleState extends State<Schedule> {
         child: Center(
           child: Text(
             _titleController.text,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
       ),
       actions: [
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         Padding(
           padding: const EdgeInsets.only(right: 5.0, bottom: 5),
           child: GestureDetector(
             onTap: () {
-              if (_addingTasks)
+              if (_addingTasks) {
                 _pickAppBarImage();
-              },
+              }
+            },
             child: Container(
               height: 60,
               width: 60,

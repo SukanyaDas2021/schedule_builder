@@ -178,7 +178,7 @@ class _TaskItemState extends State<TaskItem> {
             ),
             SizedBox(width: 10.0),
             Transform.scale(
-              scale: 1,
+              scale: 1.5,
               child: Checkbox(
                 value: widget.isDone,
                 onChanged: widget.onCheckboxChanged,
