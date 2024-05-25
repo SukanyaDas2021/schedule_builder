@@ -25,9 +25,13 @@ class DatabaseHelper {
       path,
       version: 1,
       onCreate: (db, version) {
-        return db.execute(
+        db.execute(
           "CREATE TABLE tasks(image TEXT, text TEXT, isDone INTEGER, isHighlighted INTEGER)",
         );
+        db.execute(
+          "CREATE TABLE appBar(imagePath TEXT, title TEXT)",
+        );
+        db.insert('appBar', {'imagePath': '', 'title': 'My Schedule'});
       },
     );
   }
@@ -63,4 +67,25 @@ class DatabaseHelper {
     final db = await database;
     await db.delete('tasks');
   }
+
+  Future<Map<String, String>> getAppBarData() async {
+    final db = await database;
+    final List<Map<String, dynamic>> result = await db.query('appBar');
+    if (result.isNotEmpty) {
+      return {
+        'imagePath': result[0]['imagePath'] ?? '',
+        'title': result[0]['title'] ?? 'My Schedule',
+      };
+    }
+    return {'imagePath': '', 'title': 'My Schedule'};
+  }
+
+  Future<void> updateAppBarData(String imagePath, String title) async {
+    final db = await database;
+    await db.update(
+      'appBar',
+      {'imagePath': imagePath, 'title': title},
+    );
+  }
+
 }

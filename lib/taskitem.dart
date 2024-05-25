@@ -86,7 +86,7 @@ class _TaskItemState extends State<TaskItem> {
           boxShadow: widget.isHighlighted
               ? [
             BoxShadow(
-              color: Colors.deepPurple.withOpacity(0.8), // Adjust the color and opacity for the glow effect
+              color: Colors.deepPurple.withOpacity(1.0), // Adjust the color and opacity for the glow effect
               spreadRadius: 5,
               blurRadius: 10,
               offset: Offset(0, 0), // Adjust the offset if needed

@@ -49,8 +49,11 @@ class _ScheduleState extends State<Schedule> {
 
   Future<void> _loadTasks() async {
     final loadedTasks = await _databaseHelper.getTasks();
+    final appBarData = await _databaseHelper.getAppBarData();
     setState(() {
       tasks = loadedTasks;
+      _appBarImagePath = appBarData['imagePath']!;
+      _titleController.text = appBarData['title']!;
       if (tasks.isNotEmpty) {
         _highlightedTaskIndex = tasks.indexWhere((task) => task.isHighlighted);
         _checkboxClickable = !_addingTasks;
@@ -104,6 +107,19 @@ class _ScheduleState extends State<Schedule> {
   }
 
   void _toggleAddingTasks() {
+    if (tasks.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please add one or more tasks',
+            style: TextStyle(fontSize: 18), // Increase the font size
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -219,6 +235,7 @@ class _ScheduleState extends State<Schedule> {
       setState(() {
         _appBarImagePath = pickedFile.path;
       });
+      _databaseHelper.updateAppBarData(_appBarImagePath, _titleController.text);
     }
   }
 
@@ -242,6 +259,7 @@ class _ScheduleState extends State<Schedule> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
+      backgroundColor: _addingTasks ? Colors.indigo[50] : Colors.white,
       body: Stack(
         children: [
           if (tasks.isEmpty)
@@ -389,7 +407,7 @@ class _ScheduleState extends State<Schedule> {
                           minimumSize: const Size(140, 50),
                           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: HttpHeaders.rangeHeader),
                         ),
-                        child: const Text('Add/Edit Tasks'),
+                        child: const Text('Add Tasks'),
                       ),
                       const SizedBox(width: 15,),
                       ElevatedButton(
@@ -437,7 +455,7 @@ class _ScheduleState extends State<Schedule> {
                       minimumSize: const Size(140, 40),
                       textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
-                    child: const Text('Edit Schedule'),
+                    child: const Text('Restart Schedule'),
                   ),
                   const SizedBox(width: 15),
                   ElevatedButton(
@@ -460,28 +478,34 @@ class _ScheduleState extends State<Schedule> {
     );
   }
 
+  void _updateTitle(String newTitle) {
+    setState(() {
+      _titleController.text = newTitle;
+      _isEditingTitle = false;
+    });
+    _databaseHelper.updateAppBarData(_appBarImagePath, newTitle);
+  }
+
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: Colors.blue[700],
       centerTitle: true,
       title: _isEditingTitle && _addingTasks
           ? Center(
-        child: TextField(
-          controller: _titleController,
-          autofocus: true,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            hintText: 'Edit title',
-          ),
-          onSubmitted: (newTitle) {
-            setState(() {
-              _isEditingTitle = false;
-            });
-          },
-        ),
-      )
+            child: TextField(
+              controller: _titleController,
+              autofocus: true,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Edit title',
+              ),
+              onSubmitted: (newTitle) {
+                _updateTitle(newTitle);
+              },
+            ),
+          )
           : GestureDetector(
         onTap: () {
           if (_addingTasks) {
