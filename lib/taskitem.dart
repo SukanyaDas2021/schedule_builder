@@ -168,8 +168,11 @@ class _TaskItemState extends State<TaskItem> {
                       widget.text,
                       style: TextStyle(
                         fontSize: 22.0,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: widget.isDone? FontWeight.normal : FontWeight.bold,
                         decoration: widget.isDone? TextDecoration.lineThrough : null,
+                        decorationColor: widget.isDone ? Colors.red : null,
+                        decorationThickness: 2.0,
+                        //color: widget.isDone ? Colors.red : Colors.black,
                       ),
                     ),
                   ),

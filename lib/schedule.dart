@@ -242,6 +242,8 @@ class _ScheduleState extends State<Schedule> {
   void _toggleTaskInput() {
     setState(() {
       _showTaskInput = !_showTaskInput;
+      _selectedImagePath = null;
+      _taskController.text = '';
     });
   }
 
@@ -384,6 +386,20 @@ class _ScheduleState extends State<Schedule> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        if (_selectedImagePath != null)
+                          Container(
+                            width: 50,
+                            height: 50,
+                            margin: EdgeInsets.only(left: 8.0),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              image: DecorationImage(
+                                image: FileImage(File(_selectedImagePath!)),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(width: 5),
                         ElevatedButton(
                           onPressed: () {
                             _pickImage(); // Replace _pickImage with your image picking logic
@@ -399,19 +415,6 @@ class _ScheduleState extends State<Schedule> {
                             style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
                         ),
-                        if (_selectedImagePath != null)
-                          Container(
-                            width: 50,
-                            height: 50,
-                            margin: EdgeInsets.only(left: 8.0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              image: DecorationImage(
-                                image: FileImage(File(_selectedImagePath!)),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
                         const SizedBox(width: 10),
                         ElevatedButton(
                           onPressed: _toggleTaskInput,
@@ -448,7 +451,7 @@ class _ScheduleState extends State<Schedule> {
                       ElevatedButton(
                         onPressed: _toggleTaskInput,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
+                          backgroundColor: Colors.blue[900],
                           foregroundColor: Colors.white,
                           minimumSize: const Size(140, 50),
                           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: HttpHeaders.rangeHeader),
@@ -459,7 +462,7 @@ class _ScheduleState extends State<Schedule> {
                       ElevatedButton(
                         onPressed: _toggleAddingTasks,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
+                          backgroundColor: Colors.green[800],
                           foregroundColor: Colors.white,
                           minimumSize: const Size(150, 50),
                           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -496,7 +499,7 @@ class _ScheduleState extends State<Schedule> {
                   ElevatedButton(
                     onPressed: _restartSchedule,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
+                      backgroundColor: Colors.blue[900],
                       foregroundColor: Colors.white,
                       minimumSize: const Size(140, 40),
                       textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
@@ -534,7 +537,7 @@ class _ScheduleState extends State<Schedule> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.blue[700],
+      backgroundColor: Colors.blue[900],
       centerTitle: true,
       title: _isEditingTitle && _addingTasks
           ? Center(
@@ -553,20 +556,21 @@ class _ScheduleState extends State<Schedule> {
             ),
           )
           : GestureDetector(
-        onTap: () {
-          if (_addingTasks) {
-            setState(() {
-              _isEditingTitle = true;
-            });
-          }
-        },
-        child: Center(
-          child: Text(
-            _titleController.text,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+          onTap: () {
+            if (_addingTasks) {
+              setState(() {
+                _isEditingTitle = true;
+              });
+            }
+          },
+          child: Center(
+            child: Text(
+              _titleController.text,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
           ),
         ),
-      ),
       actions: [
         const SizedBox(width: 10),
         if (_appBarImagePath.isNotEmpty)
@@ -577,6 +581,7 @@ class _ScheduleState extends State<Schedule> {
               child: Image.file(
                 File(_appBarImagePath),
                 fit: BoxFit.cover,
+                width: 50, height: 50,
               ),
             ),
           )
