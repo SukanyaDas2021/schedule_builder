@@ -255,6 +255,36 @@ class _ScheduleState extends State<Schedule> {
     }
   }
 
+  Future<void> _showImageOptionsDialog() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Image Options"),
+          content: const Text("Would you like to edit or clear the image?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+                _pickAppBarImage(); // Allow the user to pick a new image
+              },
+              child: const Text("Edit"),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _appBarImagePath = ''; // Clear the image
+                });
+                Navigator.pop(context); // Close the dialog
+              },
+              child: const Text("Clear"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -382,6 +412,22 @@ class _ScheduleState extends State<Schedule> {
                               ),
                             ),
                           ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: _toggleTaskInput,
+                          child: const Text(
+                              'Cancel',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            elevation: 4.0,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 10), // Add some space between buttons
@@ -523,32 +569,22 @@ class _ScheduleState extends State<Schedule> {
       ),
       actions: [
         const SizedBox(width: 10),
-        Padding(
-          padding: const EdgeInsets.only(right: 5.0, bottom: 5),
-          child: GestureDetector(
-            onTap: () {
-              if (_addingTasks) {
-                _pickAppBarImage();
-              }
-            },
-            child: Container(
-              height: 60,
-              width: 60,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: _appBarImagePath.isNotEmpty
-                    ? Image.file(
-                  File(_appBarImagePath),
-                  fit: BoxFit.cover,
-                )
-                    : Image.asset(
-                  'assets/blank_image.png',
-                  fit: BoxFit.cover,
-                ),
+        if (_appBarImagePath.isNotEmpty)
+          GestureDetector(
+            onTap: _showImageOptionsDialog,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.file(
+                File(_appBarImagePath),
+                fit: BoxFit.cover,
               ),
             ),
+          )
+        else
+          IconButton(
+            icon: Icon(Icons.add_photo_alternate_outlined , size: 30, color: Colors.grey),
+            onPressed: _pickAppBarImage,
           ),
-        ),
       ],
     );
   }
