@@ -3,12 +3,16 @@ class Task {
   String text;
   bool isDone;
   bool isHighlighted;
+  bool showCancelIcon;
+  bool showCancelText;
 
   Task({
     this.image = '',
     required this.text,
     this.isDone = false,
     this.isHighlighted = false,
+    this.showCancelIcon = false,
+    this.showCancelText = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -17,6 +21,8 @@ class Task {
       'text': text,
       'isDone': isDone ? 1 : 0,
       'isHighlighted': isHighlighted ? 1 : 0,
+      'showCancelIcon': showCancelIcon ? 1 : 0,
+      'showCancelText': showCancelText ? 1 : 0,
     };
   }
 
@@ -26,6 +32,8 @@ class Task {
       text: map['text'],
       isDone: map['isDone'] == 1,
       isHighlighted: map['isHighlighted'] == 1,
+      showCancelIcon: map['showCancelIcon'] == 1,
+      showCancelText: map['showCancelText'] == 1,
     );
   }
 }

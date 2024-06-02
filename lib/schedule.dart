@@ -4,6 +4,9 @@ import 'package:schedule_builder/taskitem.dart';
 import 'package:schedule_builder/task.dart';
 import 'package:schedule_builder/database_helper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'dart:io';
 
 class Schedule extends StatefulWidget {
@@ -18,6 +21,11 @@ class _ScheduleState extends State<Schedule> {
   bool _addingTasks = true;
   bool _checkboxClickable = false;
   bool _showTaskInput = false;
+  bool _editOngoingSchedule = false;
+  bool _isRecording = false;
+  String? _recordedFilePath;
+  FlutterSoundRecorder _soundRecorder = FlutterSoundRecorder();
+  AudioPlayer _audioPlayer = AudioPlayer();
 
   final _taskController = TextEditingController();
 
@@ -66,12 +74,16 @@ class _ScheduleState extends State<Schedule> {
     setState(() {
       tasks[index].isDone = newValue ?? false;
       if (newValue ?? false) {
-        _highlightedTaskIndex = (index + 1 < tasks.length) ? index + 1 : -1;
+        int nextIndex = index + 1;
+        while (nextIndex < tasks.length && tasks[nextIndex].showCancelText) {
+          nextIndex++;
+        }
+        _highlightedTaskIndex = (nextIndex < tasks.length) ? nextIndex : -1;
         if (_highlightedTaskIndex > -1) {
           tasks[_highlightedTaskIndex].isHighlighted = true;
           tasks[index].isHighlighted = false;
         }
-        if (index == tasks.length - 1) {
+        if (index == tasks.length - 1 || (nextIndex >= tasks.length && tasks[index].isDone)) {
           tasks[index].isHighlighted = false;
         }
       }
@@ -119,7 +131,6 @@ class _ScheduleState extends State<Schedule> {
       );
       return;
     }
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -181,6 +192,7 @@ class _ScheduleState extends State<Schedule> {
       tasks.forEach((task) {
         task.isDone = false;
         task.isHighlighted = false;
+        task.showCancelText = false;
       });
       _addingTasks = true;
       _checkboxClickable = false;
@@ -287,6 +299,72 @@ class _ScheduleState extends State<Schedule> {
     );
   }
 
+  Future<void> _showEditConfirmationDialog() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Confirm"),
+          content: const Text("Are you sure you want to edit an ongoing schedule?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: const Text("No"),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _checkboxClickable = false;
+                });
+                _showCancelIconsForUncompletedTasks();
+                Navigator.pop(context);
+              },
+              child: const Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showCancelIconsForUncompletedTasks() {
+    setState(() {
+      _editOngoingSchedule = true;
+      for (var task in tasks) {
+        if (!task.isDone && !task.isHighlighted) {
+          task.showCancelIcon = true;
+        }
+      }
+    });
+  }
+
+  void cancelTask(index) {
+    // Handle the cancellation logic here, such as updating the state to reflect the canceled task
+    setState(() {
+      _checkboxClickable = false;
+
+      tasks[index].showCancelIcon = false;
+      tasks[index].isHighlighted = false;
+      tasks[index].showCancelText = true;
+      tasks[index].isDone = true;
+    });
+  }
+
+  void ongoingScheduleUpdateSubmit() {
+    setState(() {
+      _checkboxClickable = true;
+      _editOngoingSchedule = false;
+      tasks.forEach((task) {
+        task.showCancelIcon = false;
+        if (task.showCancelText) {
+          task.isHighlighted = false;
+        }
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -319,6 +397,9 @@ class _ScheduleState extends State<Schedule> {
                       onDelete: () => onDeleteTask(index),
                       onTextChanged: (newText) => onTextChanged(index, newText),
                       isHighlighted: tasks[index].isHighlighted,
+                      showCancelIcon: tasks[index].showCancelIcon,
+                      onCancel: () => cancelTask(index),
+                      showCancelText: tasks[index].showCancelText,
                     ),
                   );
                 },
@@ -370,7 +451,7 @@ class _ScheduleState extends State<Schedule> {
                             _addNewTask(_taskController.text);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue[900],
+                            backgroundColor: Colors.lightBlue,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             minimumSize: const Size(50, 80),
                             elevation: 10,
@@ -405,7 +486,7 @@ class _ScheduleState extends State<Schedule> {
                             _pickImage(); // Replace _pickImage with your image picking logic
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue[900],
+                            backgroundColor: Colors.lightBlue,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             minimumSize: const Size(120, 50),
                             elevation: 10,
@@ -451,7 +532,7 @@ class _ScheduleState extends State<Schedule> {
                       ElevatedButton(
                         onPressed: _toggleTaskInput,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[900],
+                          backgroundColor: Colors.lightBlue,
                           foregroundColor: Colors.white,
                           minimumSize: const Size(140, 50),
                           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: HttpHeaders.rangeHeader),
@@ -499,12 +580,12 @@ class _ScheduleState extends State<Schedule> {
                   ElevatedButton(
                     onPressed: _restartSchedule,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[900],
+                      backgroundColor: Colors.lightBlue,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(140, 40),
                       textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
-                    child: const Text('Restart Schedule'),
+                    child: const Text('Edit Schedule'),
                   ),
                   const SizedBox(width: 15),
                   ElevatedButton(
@@ -522,6 +603,20 @@ class _ScheduleState extends State<Schedule> {
             ),
           )
               : const SizedBox(),
+          if (_editOngoingSchedule)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: ElevatedButton(
+                onPressed: ongoingScheduleUpdateSubmit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(150, 40),
+                  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                child: const Text('Submit'),
+              ),
+            ),
         ],
       ),
     );
@@ -537,40 +632,56 @@ class _ScheduleState extends State<Schedule> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.blue[900],
-      centerTitle: true,
-      title: _isEditingTitle && _addingTasks
-          ? Center(
-            child: TextField(
-              controller: _titleController,
-              autofocus: true,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                hintText: 'Edit title',
-              ),
-              onSubmitted: (newTitle) {
-                _updateTitle(newTitle);
-              },
-            ),
-          )
-          : GestureDetector(
-          onTap: () {
-            if (_addingTasks) {
-              setState(() {
-                _isEditingTitle = true;
-              });
-            }
-          },
-          child: Center(
-            child: Text(
-              _titleController.text,
-              textAlign: TextAlign.right,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
+      flexibleSpace: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.purple], // Define your gradient colors here
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
+      ),
+      centerTitle: true,
+      leading: IconButton(
+        icon: Icon(Icons.menu),
+        onPressed: () {
+          if (!_addingTasks) {
+            _showEditConfirmationDialog();
+          }
+        },
+      ),
+      title: _isEditingTitle && _addingTasks
+          ? Center(
+        child: TextField(
+          controller: _titleController,
+          autofocus: true,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            hintText: 'Edit title',
+          ),
+          onSubmitted: (newTitle) {
+            _updateTitle(newTitle);
+          },
+        ),
+      )
+          : GestureDetector(
+        onTap: () {
+          if (_addingTasks) {
+            setState(() {
+              _isEditingTitle = true;
+            });
+          }
+        },
+        child: Center(
+          child: Text(
+            _titleController.text,
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontSize:22, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
+      ),
       actions: [
         const SizedBox(width: 10),
         if (_appBarImagePath.isNotEmpty)
@@ -587,10 +698,11 @@ class _ScheduleState extends State<Schedule> {
           )
         else
           IconButton(
-            icon: Icon(Icons.add_photo_alternate_outlined , size: 30, color: Colors.grey),
+            icon: Icon(Icons.add_photo_alternate_outlined, size: 30, color: Colors.grey),
             onPressed: _pickAppBarImage,
           ),
       ],
     );
   }
+
 }

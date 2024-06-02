@@ -15,6 +15,10 @@ class TaskItem extends StatefulWidget {
   final ValueChanged<String> onTextChanged;
   final bool isHighlighted;
   final bool isEditable;
+  final bool showCancelIcon;
+  final bool showCancelText;
+
+  final VoidCallback? onCancel;
 
   TaskItem({
     required this.image,
@@ -26,6 +30,10 @@ class TaskItem extends StatefulWidget {
     required this.onTextChanged,
     required this.isHighlighted,
     required this.isEditable,
+    required this.showCancelIcon,
+    required this.showCancelText,
+
+    this.onCancel,
   });
 
   @override
@@ -89,107 +97,155 @@ class _TaskItemState extends State<TaskItem> {
               color: Colors.deepPurple.withOpacity(1.0), // Adjust the color and opacity for the glow effect
               spreadRadius: 5,
               blurRadius: 10,
-              offset: Offset(0, 0), // Adjust the offset if needed
+              offset: Offset(0, 0),
             ),
           ]
               : [],
           color: widget.isHighlighted ? Colors.white : Colors.blue[50],
-          //color: Colors.teal[50],
           borderRadius: BorderRadius.circular(15.0),
           border: Border.all(
             color: Colors.grey, // Border color
             width: 2.0, // Border width (you can adjust this value as needed)
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
+        child: Stack(
+          alignment: Alignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: GestureDetector(
-                onTap: widget.isEditable
-                    ? () async {
-                    final picker = ImagePicker();
-                    final pickedFile = await picker.pickImage(
-                      source: ImageSource.gallery,
-                    );
-                    if (pickedFile != null) {
-                      widget.onImageChanged(pickedFile.path);
-                    }
-                  }
-                  : null,
-                child: widget.image.isNotEmpty
-                    ? Image.file(
-                  File(widget.image),
-                  width: 130.0,
-                  height: 130.0,
-                  fit: BoxFit.cover,
-                )
-                : Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Icon(Icons.add_photo_alternate_outlined , size: 30, color: Colors.grey),
-                )
-              ),
-            ),
-            SizedBox(width: 15.0),
-            Expanded(
-              child: GestureDetector(
-                onTap: widget.isEditable
-                    ? () {
-                    setState(() {
-                      isEditing = true;
-                    });
-                  }
-                  : null,
-                child: Padding(
-                  padding: const EdgeInsets.all(3.0),
-                  child: isEditing  && widget.isEditable
-                      ? TextField(
-                    controller: _taskTextController,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: GestureDetector(
+                    onTap: widget.isEditable
+                        ? () async {
+                        final picker = ImagePicker();
+                        final pickedFile = await picker.pickImage(
+                          source: ImageSource.gallery,
+                        );
+                        if (pickedFile != null) {
+                          widget.onImageChanged(pickedFile.path);
+                        }
+                      }
+                      : null,
+                    child: widget.image.isNotEmpty
+                        ? Image.file(
+                      File(widget.image),
+                      width: 130.0,
+                      height: 130.0,
+                      fit: BoxFit.cover,
+                    )
+                    : Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Icon(Icons.add_photo_alternate_outlined , size: 30, color: Colors.grey),
+                    )
+                  ),
+                ),
+                SizedBox(width: 15.0),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: widget.isEditable
+                        ? () {
+                        setState(() {
+                          isEditing = true;
+                        });
+                      }
+                      : null,
+                    child: Padding(
+                      padding: const EdgeInsets.all(3.0),
+                      child: isEditing  && widget.isEditable
+                          ? TextField(
+                              controller: _taskTextController,
+                              autofocus: true,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                              style: TextStyle(
+                                fontSize: 22.0,
+                                fontWeight: FontWeight.bold,
+                                decoration: widget.isDone ? TextDecoration.lineThrough : null,
+                              ),
+                              onSubmitted: (newText) {
+                                widget.onTextChanged(newText);
+                                setState(() {
+                                  isEditing = false;
+                                });
+                              },
+                            )
+                          : SingleChildScrollView(
+                              scrollDirection: Axis.vertical,
+                              child: Text(
+                                widget.text,
+                                style: TextStyle(
+                                  fontSize: 22.0,
+                                  fontWeight: widget.isDone? FontWeight.normal : FontWeight.bold,
+                                  decoration: widget.isDone? TextDecoration.lineThrough : null,
+                                  decorationColor: widget.isDone ? Colors.red : null,
+                                  decorationThickness: 2.0,
+                                ),
+                              ),
+                            ),
                     ),
-                    style: TextStyle(
-                      fontSize: 22.0,
-                      fontWeight: FontWeight.bold,
-                      decoration: widget.isDone ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+                SizedBox(width: 10.0),
+                if (!widget.showCancelText)
+                  Transform.scale(
+                    scale: 1.5,
+                    child: Checkbox(
+                      value: widget.isDone,
+                      onChanged: widget.onCheckboxChanged,
+                      checkColor: Colors.green[800],
+                      activeColor: Colors.transparent,
                     ),
-                    onSubmitted: (newText) {
-                      widget.onTextChanged(newText);
-                      setState(() {
-                        isEditing = false;
-                      });
+                  ),
+
+                if (widget.showCancelIcon)
+                  IconButton(
+                    icon: Icon(Icons.cancel , size: 20, color: Colors.red),
+                    onPressed: (){
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text("Cancel Task"),
+                            content: Text("Are you sure you want to cancel this task?"),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: Text("No"),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  // Call the onCancel callback if user confirms
+                                  widget.onCancel?.call();
+                                  Navigator.of(context).pop(true);
+                                },
+                                child: Text("Yes"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     },
-                  )
-                      : SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: Text(
-                      widget.text,
-                      style: TextStyle(
-                        fontSize: 22.0,
-                        fontWeight: widget.isDone? FontWeight.normal : FontWeight.bold,
-                        decoration: widget.isDone? TextDecoration.lineThrough : null,
-                        decorationColor: widget.isDone ? Colors.red : null,
-                        decorationThickness: 2.0,
-                        //color: widget.isDone ? Colors.red : Colors.black,
-                      ),
+                  ),
+              ],
+            ),
+            if (widget.showCancelText)
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    'X',
+                    style: TextStyle(
+                      fontSize: 100,
+                      color: Colors.red.withOpacity(0.5),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(width: 10.0),
-            Transform.scale(
-              scale: 1.5,
-              child: Checkbox(
-                value: widget.isDone,
-                onChanged: widget.onCheckboxChanged,
-                checkColor: Colors.green[800],
-                activeColor: Colors.transparent,
-              ),
-            ),
-          ],
+          ]
         ),
       ),
     );

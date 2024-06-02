@@ -26,7 +26,7 @@ class DatabaseHelper {
       version: 1,
       onCreate: (db, version) {
         db.execute(
-          "CREATE TABLE tasks(image TEXT, text TEXT, isDone INTEGER, isHighlighted INTEGER)",
+          "CREATE TABLE tasks(image TEXT, text TEXT, isDone INTEGER, isHighlighted INTEGER, showCancelIcon INTEGER, showCancelText INTEGER)",
         );
         db.execute(
           "CREATE TABLE appBar(imagePath TEXT, title TEXT)",
