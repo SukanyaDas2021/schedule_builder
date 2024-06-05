@@ -5,6 +5,7 @@ class Task {
   bool isHighlighted;
   bool showCancelIcon;
   bool showCancelText;
+  String recordedFilePath;
 
   Task({
     this.image = '',
@@ -13,6 +14,7 @@ class Task {
     this.isHighlighted = false,
     this.showCancelIcon = false,
     this.showCancelText = false,
+    this.recordedFilePath = '',
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class Task {
       'isHighlighted': isHighlighted ? 1 : 0,
       'showCancelIcon': showCancelIcon ? 1 : 0,
       'showCancelText': showCancelText ? 1 : 0,
+      'recordedFilePath': recordedFilePath,
     };
   }
 
@@ -34,6 +37,7 @@ class Task {
       isHighlighted: map['isHighlighted'] == 1,
       showCancelIcon: map['showCancelIcon'] == 1,
       showCancelText: map['showCancelText'] == 1,
+      recordedFilePath: map['recordedFilePath'],
     );
   }
 }

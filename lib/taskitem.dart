@@ -17,6 +17,7 @@ class TaskItem extends StatefulWidget {
   final bool isEditable;
   final bool showCancelIcon;
   final bool showCancelText;
+  final String? recordedFilePath;
 
   final VoidCallback? onCancel;
 
@@ -32,7 +33,7 @@ class TaskItem extends StatefulWidget {
     required this.isEditable,
     required this.showCancelIcon,
     required this.showCancelText,
-
+    this.recordedFilePath,
     this.onCancel,
   });
 
@@ -114,6 +115,11 @@ class _TaskItemState extends State<TaskItem> {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                if (widget.recordedFilePath != null)
+                  IconButton(
+                    icon: Icon(Icons.play_arrow),
+                    onPressed: () {},
+                  ),
                 Padding(
                   padding: const EdgeInsets.all(4.0),
                   child: GestureDetector(

@@ -4,9 +4,10 @@ import 'package:schedule_builder/taskitem.dart';
 import 'package:schedule_builder/task.dart';
 import 'package:schedule_builder/database_helper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_sound/flutter_sound.dart';
+//import 'package:record/record.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:another_audio_recorder/another_audio_recorder.dart';
 import 'dart:io';
 
 class Schedule extends StatefulWidget {
@@ -22,20 +23,15 @@ class _ScheduleState extends State<Schedule> {
   bool _checkboxClickable = false;
   bool _showTaskInput = false;
   bool _editOngoingSchedule = false;
-  bool _isRecording = false;
-  String? _recordedFilePath;
-  FlutterSoundRecorder _soundRecorder = FlutterSoundRecorder();
-  AudioPlayer _audioPlayer = AudioPlayer();
-
   final _taskController = TextEditingController();
-
-  // AppBar title state
-  bool _isEditingTitle = false;
+  bool _isEditingTitle = false; // AppBar title state
   final TextEditingController _titleController = TextEditingController(text: "My Schedule");
   int _highlightedTaskIndex = -1;
-
   bool _showThumbsUp = false;
   String? _selectedImagePath;
+  late AnotherAudioRecorder _audioRecorder;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool isRecording = false;
 
   void _toggleThumbsUp() {
     setState(() {
@@ -53,6 +49,13 @@ class _ScheduleState extends State<Schedule> {
   void initState() {
     super.initState();
     _loadTasks();
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    //_audioRecorder.dispose();
+    super.dispose();
   }
 
   Future<void> _loadTasks() async {
@@ -365,6 +368,43 @@ class _ScheduleState extends State<Schedule> {
     });
   }
 
+  Future<void> startRecording(int index) async {
+    try {
+      if (await AnotherAudioRecorder.hasPermissions) {
+        String audioPath = "assets/taskAudio_$index.mp3";
+        await _audioRecorder.start(RecordConfig(), path: audioPath);
+        setState(() {
+          isRecording = true;
+          tasks[index].recordedFilePath = audioPath;
+        });
+      }
+    }
+    catch(e){
+      print("Error while starting recording: $e");
+    }
+  }
+
+  Future<void> stopRecording(int index) async {
+    try {
+      final path = await _audioRecorder.stop();
+      setState(() {
+        isRecording = false;
+        //tasks[index].recordedFilePath = path!;
+      });
+    }
+    catch(e) {
+      print ("Error during stop recording: $e");
+    }
+  }
+
+  Future<void> playRecording(int index) async {
+    String _filePath = tasks[index].recordedFilePath;
+    if ( _filePath != null) {
+      await _audioPlayer.setFilePath(_filePath);
+      _audioPlayer.play();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -514,7 +554,23 @@ class _ScheduleState extends State<Schedule> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10), // Add some space between buttons
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        isRecording ? stopRecording : startRecording; // You will define this method to handle audio recording
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        minimumSize: const Size(120, 50),
+                        elevation: 10,
+                      ),
+                      child: const Text(
+                        'Add Sound',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                    //const SizedBox(height: 5), // Add some space between buttons
                   ],
                 ),
               ),
