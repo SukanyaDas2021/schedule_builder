@@ -19,7 +19,7 @@ samples, guidance on mobile development, and a full API reference.
 
 The Task class models a to-do item, encapsulating its image, text, completion status, highlighting, and display options for cancellation features. It includes methods to convert to and from a map for easy storage and retrieval in an SQLite database.
 
-##TaskItem class (task_item.dart)
+##Taskitem class (taskitem.dart)
 
 The TaskItem class represents a visual component for a task, handling user interactions like marking as done, editing text, changing images, and deletion. It uses a stateful widget to manage UI updates and behavior based on task properties and user actions, including confirmation dialogs for deletions.
 
