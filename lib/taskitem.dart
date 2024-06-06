@@ -17,7 +17,6 @@ class TaskItem extends StatefulWidget {
   final bool isEditable;
   final bool showCancelIcon;
   final bool showCancelText;
-
   final VoidCallback? onCancel;
 
   TaskItem({
@@ -32,7 +31,6 @@ class TaskItem extends StatefulWidget {
     required this.isEditable,
     required this.showCancelIcon,
     required this.showCancelText,
-
     this.onCancel,
   });
 

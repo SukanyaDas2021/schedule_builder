@@ -4,12 +4,15 @@ import 'package:schedule_builder/taskitem.dart';
 import 'package:schedule_builder/task.dart';
 import 'package:schedule_builder/database_helper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_sound/flutter_sound.dart';
+import 'package:schedule_builder/schedulemodel.dart';
+import 'package:schedule_builder/schedulescreen.dart';
 import 'dart:io';
 
 class Schedule extends StatefulWidget {
+  final ScheduleModel schedule;
+
+  Schedule({required this.schedule});
+
   @override
   _ScheduleState createState() => _ScheduleState();
 }
@@ -22,10 +25,6 @@ class _ScheduleState extends State<Schedule> {
   bool _checkboxClickable = false;
   bool _showTaskInput = false;
   bool _editOngoingSchedule = false;
-  bool _isRecording = false;
-  String? _recordedFilePath;
-  FlutterSoundRecorder _soundRecorder = FlutterSoundRecorder();
-  AudioPlayer _audioPlayer = AudioPlayer();
 
   final _taskController = TextEditingController();
 
@@ -56,8 +55,8 @@ class _ScheduleState extends State<Schedule> {
   }
 
   Future<void> _loadTasks() async {
-    final loadedTasks = await _databaseHelper.getTasks();
-    final appBarData = await _databaseHelper.getAppBarData();
+    final loadedTasks = await _databaseHelper.getTasks(widget.schedule.id);
+    final appBarData = await _databaseHelper.getAppBarData(widget.schedule.id);
     setState(() {
       tasks = loadedTasks;
       _appBarImagePath = appBarData['imagePath']!;
@@ -109,7 +108,7 @@ class _ScheduleState extends State<Schedule> {
         }
         //_pickImage();
       });
-      _databaseHelper.insertTask(newTask);
+      _databaseHelper.insertTask(newTask, widget.schedule.id);
     }
     else { print("Task text cannot be empty or blank."); }
   }
@@ -166,16 +165,16 @@ class _ScheduleState extends State<Schedule> {
     setState(() {
       tasks[index].image = newImage;
     });
-    _databaseHelper.updateTask(tasks[index]);
+    _databaseHelper.updateTask(tasks[index], widget.schedule.id);
   }
 
   void onDeleteTask(int index) {
     setState(() {
       tasks.removeAt(index);
     });
-    _databaseHelper.deleteAllTasks(); // Clear all tasks and reinsert remaining ones
+    _databaseHelper.deleteAllTasks(widget.schedule.id); // Clear all tasks and reinsert remaining ones
     for (var task in tasks) {
-      _databaseHelper.insertTask(task);
+      _databaseHelper.insertTask(task, widget.schedule.id);
     }
   }
 
@@ -183,7 +182,7 @@ class _ScheduleState extends State<Schedule> {
     setState(() {
       tasks[index].text = newText;
     });
-    _databaseHelper.updateTask(tasks[index]);
+    _databaseHelper.updateTask(tasks[index], widget.schedule.id);
   }
 
   void _restartSchedule() {
@@ -201,9 +200,9 @@ class _ScheduleState extends State<Schedule> {
       //  tasks[0].isHighlighted = true;
       //}
     });
-    _databaseHelper.deleteAllTasks();
+    _databaseHelper.deleteAllTasks(widget.schedule.id);
     for (var task in tasks) {
-      _databaseHelper.insertTask(task);
+      _databaseHelper.insertTask(task, widget.schedule.id);
     }
   }
 
@@ -229,7 +228,7 @@ class _ScheduleState extends State<Schedule> {
                   _addingTasks = true;
                   _checkboxClickable = false;
                 });
-                _databaseHelper.deleteAllTasks();
+                _databaseHelper.deleteAllTasks(widget.schedule.id);
                 Navigator.pop(context); // Close the dialog
               },
               child: const Text("Clear"),
@@ -247,7 +246,7 @@ class _ScheduleState extends State<Schedule> {
       setState(() {
         _appBarImagePath = pickedFile.path;
       });
-      _databaseHelper.updateAppBarData(_appBarImagePath, _titleController.text);
+      _databaseHelper.updateAppBarData(_appBarImagePath, _titleController.text, widget.schedule.id);
     }
   }
 
@@ -617,6 +616,16 @@ class _ScheduleState extends State<Schedule> {
                 child: const Text('Submit'),
               ),
             ),
+          Positioned(
+            bottom: 16.0,
+            left: 16.0,
+            child: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -627,7 +636,7 @@ class _ScheduleState extends State<Schedule> {
       _titleController.text = newTitle;
       _isEditingTitle = false;
     });
-    _databaseHelper.updateAppBarData(_appBarImagePath, newTitle);
+    _databaseHelper.updateAppBarData(_appBarImagePath, newTitle, widget.schedule.id);
   }
 
   AppBar _buildAppBar() {
@@ -642,7 +651,8 @@ class _ScheduleState extends State<Schedule> {
         ),
       ),
       centerTitle: true,
-      leading: IconButton(
+      leading:
+      IconButton(
         icon: Icon(Icons.menu),
         onPressed: () {
           if (!_addingTasks) {

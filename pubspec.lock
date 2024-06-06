@@ -9,62 +9,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
-  audioplayers:
-    dependency: "direct main"
-    description:
-      name: audioplayers
-      sha256: "752039d6aa752597c98ec212e9759519061759e402e7da59a511f39d43aa07d2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.0"
-  audioplayers_android:
-    dependency: transitive
-    description:
-      name: audioplayers_android
-      sha256: de576b890befe27175c2f511ba8b742bec83765fa97c3ce4282bba46212f58e4
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.0.0"
-  audioplayers_darwin:
-    dependency: transitive
-    description:
-      name: audioplayers_darwin
-      sha256: e507887f3ff18d8e5a10a668d7bedc28206b12e10b98347797257c6ae1019c3b
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.0"
-  audioplayers_linux:
-    dependency: transitive
-    description:
-      name: audioplayers_linux
-      sha256: "3d3d244c90436115417f170426ce768856d8fe4dfc5ed66a049d2890acfa82f9"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.0.0"
-  audioplayers_platform_interface:
-    dependency: transitive
-    description:
-      name: audioplayers_platform_interface
-      sha256: "6834dd48dfb7bc6c2404998ebdd161f79cd3774a7e6779e1348d54a3bfdcfaa5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.0"
-  audioplayers_web:
-    dependency: transitive
-    description:
-      name: audioplayers_web
-      sha256: db8fc420dadf80da18e2286c18e746fb4c3b2c5adbf0c963299dde046828886d
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.0.0"
-  audioplayers_windows:
-    dependency: transitive
-    description:
-      name: audioplayers_windows
-      sha256: "8605762dddba992138d476f6a0c3afd9df30ac5b96039929063eceed416795c2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.0.0"
   boolean_selector:
     dependency: transitive
     description:
@@ -137,14 +81,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
-  file:
-    dependency: transitive
-    description:
-      name: file
-      sha256: "5fc22d7c25582e38ad9a8515372cd9a93834027aacf1801cf01164dac0ffa08c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.0"
   file_selector_linux:
     dependency: transitive
     description:
@@ -210,26 +146,26 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_sound
-      sha256: faa544f073fa9e7e4633e35acf228d4aa1012b39e35eb3b1c81b9b6fb6511af1
+      sha256: "22f13af5cacf48380318851997e4c29251fd0602a26fa6f07f7685c7e1e63699"
       url: "https://pub.dev"
     source: hosted
-    version: "9.4.12"
+    version: "9.4.18"
   flutter_sound_platform_interface:
     dependency: transitive
     description:
       name: flutter_sound_platform_interface
-      sha256: "638b0c234ec73a04511a3d186f85e3957f0e56da82326bcb8e905d7f05a06554"
+      sha256: "9637cad39c8d60e25ebdfc4fd06188976f43f577be4d8c51c3e4f086d58da30a"
       url: "https://pub.dev"
     source: hosted
-    version: "9.4.12"
+    version: "9.4.18"
   flutter_sound_web:
     dependency: transitive
     description:
       name: flutter_sound_web
-      sha256: d7db4b3febbab37c00a4a4fee7956433b3d1e1ce9778c265db607a07aabc4e09
+      sha256: "1a070a7114548e1b93b668843e65142dbb8f132ed6a2a0ad2d6a64e093039d25"
       url: "https://pub.dev"
     source: hosted
-    version: "9.4.12"
+    version: "9.4.18"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -324,10 +260,10 @@ packages:
     dependency: transitive
     description:
       name: js
-      sha256: c1b2e9b5ea78c45e1a0788d29606ba27dc5f71f019f32ca5140f61ef071838cf
+      sha256: f2c445dce49627136094980615a031419f7f3eb393237e4ecd97ac15dea343f3
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.1"
+    version: "0.6.7"
   leak_tracker:
     dependency: transitive
     description:
@@ -484,10 +420,10 @@ packages:
     dependency: transitive
     description:
       name: permission_handler_apple
-      sha256: e9ad66020b89ff1b63908f247c2c6f931c6e62699b756ef8b3c4569350cd8662
+      sha256: e6f6d73b12438ef13e648c4ae56bd106ec60d17e90a59c4545db6781229082a0
       url: "https://pub.dev"
     source: hosted
-    version: "9.4.4"
+    version: "9.4.5"
   permission_handler_html:
     dependency: transitive
     description:
