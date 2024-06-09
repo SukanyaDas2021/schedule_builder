@@ -12,23 +12,26 @@ class SchedulesScreen extends StatefulWidget {
 }
 
 class _SchedulesScreenState extends State<SchedulesScreen> {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
-  late Future<List<ScheduleModel>> _schedules;
+  final DatabaseHelper _databaseHelperScheduleScreen = DatabaseHelper();
+  Future<List<ScheduleModel>>? _schedules;
 
   @override
   void initState() {
     super.initState();
+    _schedules = Future.value([]);
     _loadSchedules();
   }
 
-  void _loadSchedules() {
+  Future<void> _loadSchedules() async {
     print ('loading schedule now...');
+    final schedules = await _databaseHelperScheduleScreen.getSchedules();
     setState(() {
-      _schedules = _databaseHelper.getSchedules();
+      _schedules = Future.value(schedules);
     });
-    _schedules.then((schedules) {
-      print('Loaded schedules: $schedules'); // Debug log
-    });
+    print('Loaded schedules: $schedules');
+    for (var schedule in schedules) {
+      print('Schedule ID: ${schedule.id}, Name: ${schedule.name}, Adding Tasks: ${schedule.addingTasks}');
+    }
   }
 
   @override
@@ -40,9 +43,12 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          }
+          else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            _databaseHelperScheduleScreen.removeDatabase('schedule');
             return Center(child: Text('No Schedules found!'));
-          } else if (snapshot.hasError) {
+          }
+          else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           else {
@@ -64,7 +70,8 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
                   trailing: IconButton(
                     icon: Icon(Icons.delete),
                     onPressed: () async {
-                      await _databaseHelper.deleteSchedule(schedules[index].id);
+                      await _databaseHelperScheduleScreen.deleteSchedule(schedules[index].id);
+                      await _databaseHelperScheduleScreen.deleteAppBar(schedules[index].id);
                       _loadSchedules();
                     },
                   ),
@@ -89,7 +96,7 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
                 actions: [
                   TextButton(
                     onPressed: () async {
-                      await _databaseHelper.createSchedule(_controller.text);
+                      int scheduleId = await _databaseHelperScheduleScreen.createSchedule(_controller.text);
                       Navigator.pop(context);
                       _loadSchedules();
                     },

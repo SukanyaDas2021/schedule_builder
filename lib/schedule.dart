@@ -21,17 +21,17 @@ class _ScheduleState extends State<Schedule> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   String _appBarImagePath = '';
   List<Task> tasks = [];
-  bool _addingTasks = true;
-  bool _checkboxClickable = false;
-  bool _showTaskInput = false;
+  bool addingTasks = true;
+  bool checkboxClickable = false;
+  bool showTaskInput = false;
   bool _editOngoingSchedule = false;
+  int highlightedTaskIndex = -1;
 
   final _taskController = TextEditingController();
 
   // AppBar title state
   bool _isEditingTitle = false;
   final TextEditingController _titleController = TextEditingController(text: "My Schedule");
-  int _highlightedTaskIndex = -1;
 
   bool _showThumbsUp = false;
   String? _selectedImagePath;
@@ -39,7 +39,7 @@ class _ScheduleState extends State<Schedule> {
   void _toggleThumbsUp() {
     setState(() {
       _showThumbsUp = !_showThumbsUp;
-      _checkboxClickable = false;
+      checkboxClickable = false;
     });
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
@@ -51,6 +51,10 @@ class _ScheduleState extends State<Schedule> {
   @override
   void initState() {
     super.initState();
+    addingTasks = widget.schedule.addingTasks;
+    checkboxClickable = widget.schedule.checkboxClickable;
+    showTaskInput = widget.schedule.showTaskInput;
+    highlightedTaskIndex = widget.schedule.highlightedTaskIndex;
     _loadTasks();
   }
 
@@ -62,14 +66,21 @@ class _ScheduleState extends State<Schedule> {
       _appBarImagePath = appBarData['imagePath']!;
       _titleController.text = appBarData['title']!;
       if (tasks.isNotEmpty) {
-        _highlightedTaskIndex = tasks.indexWhere((task) => task.isHighlighted);
-        _checkboxClickable = !_addingTasks;
+        highlightedTaskIndex = tasks.indexWhere((task) => task.isHighlighted);
+        checkboxClickable = !addingTasks;
+        if (highlightedTaskIndex != -1)
+          _databaseHelper.updateTask(tasks[highlightedTaskIndex], widget.schedule.id);
       }
+      //_databaseHelper.updateSchedule(widget.schedule);
+      //_saveScheduleChanges(widget.schedule);
+      _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'highlightedTaskIndex', highlightedTaskIndex);
+      _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'checkboxClickable', checkboxClickable);
+
     });
   }
 
   void onCheckboxChanged(int index, bool? newValue) {
-    if (!_checkboxClickable) return;
+    if (!checkboxClickable) return;
     setState(() {
       tasks[index].isDone = newValue ?? false;
       if (newValue ?? false) {
@@ -77,23 +88,32 @@ class _ScheduleState extends State<Schedule> {
         while (nextIndex < tasks.length && tasks[nextIndex].showCancelText) {
           nextIndex++;
         }
-        _highlightedTaskIndex = (nextIndex < tasks.length) ? nextIndex : -1;
-        if (_highlightedTaskIndex > -1) {
-          tasks[_highlightedTaskIndex].isHighlighted = true;
+        highlightedTaskIndex = (nextIndex < tasks.length) ? nextIndex : -1;
+        if (highlightedTaskIndex > -1) {
+          tasks[highlightedTaskIndex].isHighlighted = true;
           tasks[index].isHighlighted = false;
+          _databaseHelper.updateTask(tasks[index], widget.schedule.id);
+          _databaseHelper.updateTask(tasks[highlightedTaskIndex], widget.schedule.id);
         }
         if (index == tasks.length - 1 || (nextIndex >= tasks.length && tasks[index].isDone)) {
           tasks[index].isHighlighted = false;
+          _databaseHelper.updateTask(tasks[index], widget.schedule.id);
         }
+        _databaseHelper.updateTask(tasks[index], widget.schedule.id);
+
       }
       if (_allTasksDone()) {
         _toggleThumbsUp();
       }
+      //_databaseHelper.updateSchedule(widget.schedule);
+      //_saveScheduleChanges(widget.schedule);
+      _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'highlightedTaskIndex', highlightedTaskIndex);
+
     });
   }
 
   void _addNewTask(String taskText) {
-    if (!_addingTasks) return;
+    if (!addingTasks) return;
     String trimmedText = taskText.trim();
     if (trimmedText.isNotEmpty) {
       final newTask = Task(image: _selectedImagePath ?? '', text: taskText, isDone: false);
@@ -101,14 +121,18 @@ class _ScheduleState extends State<Schedule> {
         tasks.add(newTask);
         //int newIndex = tasks.length - 1;
         _taskController.clear();
-        _showTaskInput = false;  // Hide the input after adding a task
+        showTaskInput = false;  // Hide the input after adding a task
         _selectedImagePath = null;
-        if (_highlightedTaskIndex == -1) {
-          _highlightedTaskIndex = 0;
+        if (highlightedTaskIndex == -1) {
+          highlightedTaskIndex = 0;
         }
         //_pickImage();
       });
       _databaseHelper.insertTask(newTask, widget.schedule.id);
+      //_databaseHelper.updateSchedule(widget.schedule);
+      //_saveScheduleChanges(widget.schedule);
+      _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'highlightedTaskIndex', highlightedTaskIndex);
+      _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'showTaskInput', showTaskInput);
     }
     else { print("Task text cannot be empty or blank."); }
   }
@@ -146,12 +170,19 @@ class _ScheduleState extends State<Schedule> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  _addingTasks = false;
-                  _checkboxClickable = true;
+                  addingTasks = false;
+                  checkboxClickable = true;
                   tasks[0].isHighlighted = true;
-                  _showTaskInput = false;
+                  showTaskInput = false;
                 });
+                _databaseHelper.updateTask(tasks[0], widget.schedule.id);
                 Navigator.pop(context); // Close the dialog
+                //_databaseHelper.updateSchedule(widget.schedule);
+                _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'showTaskInput', showTaskInput);
+                _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'addingTasks', addingTasks);
+                _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'checkboxClickable', checkboxClickable);
+                //_saveScheduleChanges(widget.schedule);
+                _databaseHelper.updateAppBarData(_appBarImagePath, _titleController.text, widget.schedule.id);
               },
               child: const Text("Yes"),
             ),
@@ -187,14 +218,13 @@ class _ScheduleState extends State<Schedule> {
 
   void _restartSchedule() {
     setState(() {
-      // Clear all checked tasks
       tasks.forEach((task) {
         task.isDone = false;
         task.isHighlighted = false;
         task.showCancelText = false;
       });
-      _addingTasks = true;
-      _checkboxClickable = false;
+      addingTasks = true;
+      checkboxClickable = false;
       // Highlight the first task item
       //if (tasks.isNotEmpty) {
       //  tasks[0].isHighlighted = true;
@@ -204,6 +234,10 @@ class _ScheduleState extends State<Schedule> {
     for (var task in tasks) {
       _databaseHelper.insertTask(task, widget.schedule.id);
     }
+    //_databaseHelper.updateSchedule(widget.schedule);
+    //_saveScheduleChanges(widget.schedule);
+    _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'addingTasks', addingTasks);
+    _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'checkboxClickable', checkboxClickable);
   }
 
   void _clearAllTasks() {
@@ -224,11 +258,15 @@ class _ScheduleState extends State<Schedule> {
               onPressed: () {
                 setState(() {
                   tasks.clear(); // Clear all tasks
-                  _highlightedTaskIndex = -1;
-                  _addingTasks = true;
-                  _checkboxClickable = false;
+                  highlightedTaskIndex = -1;
+                  addingTasks = true;
+                  checkboxClickable = false;
                 });
                 _databaseHelper.deleteAllTasks(widget.schedule.id);
+                //_databaseHelper.updateSchedule(widget.schedule);
+                //_saveScheduleChanges(widget.schedule);
+                _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'addingTasks', addingTasks);
+                _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'checkboxClickable', checkboxClickable);
                 Navigator.pop(context); // Close the dialog
               },
               child: const Text("Clear"),
@@ -246,16 +284,20 @@ class _ScheduleState extends State<Schedule> {
       setState(() {
         _appBarImagePath = pickedFile.path;
       });
-      _databaseHelper.updateAppBarData(_appBarImagePath, _titleController.text, widget.schedule.id);
+      _databaseHelper.updateAppBarImage(_appBarImagePath,widget.schedule.id);
     }
   }
 
   void _toggleTaskInput() {
+    print('modifying showTaskInput from {$showTaskInput}...');
     setState(() {
-      _showTaskInput = !_showTaskInput;
+      showTaskInput = !showTaskInput;
       _selectedImagePath = null;
       _taskController.text = '';
     });
+    //_databaseHelper.updateSchedule(widget.schedule);
+    //_saveScheduleChanges(widget.schedule);
+    _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'showTaskInput', showTaskInput);
   }
 
   Future<void> _pickImage() async {
@@ -315,10 +357,13 @@ class _ScheduleState extends State<Schedule> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  _checkboxClickable = false;
+                  checkboxClickable = false;
                 });
                 _showCancelIconsForUncompletedTasks();
                 Navigator.pop(context);
+                //_databaseHelper.updateSchedule(widget.schedule);
+                //_saveScheduleChanges(widget.schedule);
+                _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'checkboxClickable', checkboxClickable);
               },
               child: const Text("Yes"),
             ),
@@ -334,33 +379,48 @@ class _ScheduleState extends State<Schedule> {
       for (var task in tasks) {
         if (!task.isDone && !task.isHighlighted) {
           task.showCancelIcon = true;
+          _databaseHelper.updateTask(task, widget.schedule.id);
         }
       }
     });
+    //_databaseHelper.updateSchedule(widget.schedule);
+    _saveScheduleChanges(widget.schedule);
   }
 
   void cancelTask(index) {
-    // Handle the cancellation logic here, such as updating the state to reflect the canceled task
     setState(() {
-      _checkboxClickable = false;
-
+      checkboxClickable = false;
       tasks[index].showCancelIcon = false;
       tasks[index].isHighlighted = false;
       tasks[index].showCancelText = true;
       tasks[index].isDone = true;
     });
+    _databaseHelper.updateTask(tasks[index], widget.schedule.id);
+    //_databaseHelper.updateSchedule(widget.schedule);
+    _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'checkboxClickable', checkboxClickable);
   }
 
   void ongoingScheduleUpdateSubmit() {
     setState(() {
-      _checkboxClickable = true;
+      checkboxClickable = true;
       _editOngoingSchedule = false;
       tasks.forEach((task) {
         task.showCancelIcon = false;
         if (task.showCancelText) {
           task.isHighlighted = false;
         }
+        _databaseHelper.updateTask(task, widget.schedule.id);
       });
+      _databaseHelper.updateSchedule(widget.schedule);
+      _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'checkboxClickable', checkboxClickable);
+    });
+  }
+
+  void _saveScheduleChanges(ScheduleModel updatedSchedule) {
+    _databaseHelper.updateSchedule(updatedSchedule).then((_) {
+      print('Schedule changes saved');
+    }).catchError((error) {
+      print('Failed to save schedule changes: $error');
     });
   }
 
@@ -368,7 +428,7 @@ class _ScheduleState extends State<Schedule> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
-      backgroundColor: _addingTasks ? Colors.indigo[50] : Colors.white,
+      backgroundColor: addingTasks ? Colors.indigo[50] : Colors.white,
       body: Stack(
         children: [
           if (tasks.isEmpty)
@@ -380,7 +440,7 @@ class _ScheduleState extends State<Schedule> {
             )
           else
             Padding(
-              padding: EdgeInsets.fromLTRB(2, 2, 2, _addingTasks ? 120 : 5),
+              padding: EdgeInsets.fromLTRB(2, 2, 2, addingTasks ? 120 : 5),
               child: ListView.builder(
                 itemCount: tasks.length,
                 itemBuilder: (context, index) {
@@ -390,7 +450,7 @@ class _ScheduleState extends State<Schedule> {
                       image: tasks[index].image,
                       text: tasks[index].text,
                       isDone: tasks[index].isDone,
-                      isEditable: _addingTasks,
+                      isEditable: addingTasks,
                       onCheckboxChanged: (newValue) => onCheckboxChanged(index, newValue),
                       onImageChanged: (newImage) => onImageChanged(index, newImage),
                       onDelete: () => onDeleteTask(index),
@@ -404,7 +464,7 @@ class _ScheduleState extends State<Schedule> {
                 },
               ),
             ),
-          if (_showTaskInput)
+          if (showTaskInput)
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
@@ -518,11 +578,11 @@ class _ScheduleState extends State<Schedule> {
                 ),
               ),
             ),
-          if (!_showTaskInput)
+          if (!showTaskInput)
             Align(
               alignment: Alignment.bottomCenter,
               child: Visibility(
-                visible: _addingTasks,
+                visible: addingTasks,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20.0,5,20,20),
                   child: Row(
@@ -542,9 +602,9 @@ class _ScheduleState extends State<Schedule> {
                       ElevatedButton(
                         onPressed: _toggleAddingTasks,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[800],
+                          backgroundColor: Colors.blue[800],
                           foregroundColor: Colors.white,
-                          minimumSize: const Size(150, 50),
+                          minimumSize: const Size(130, 50),
                           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         child: const Text('Done'),
@@ -618,10 +678,17 @@ class _ScheduleState extends State<Schedule> {
             ),
           Positioned(
             bottom: 16.0,
-            left: 16.0,
+            left: 5.0,
             child: IconButton(
               icon: Icon(Icons.arrow_back),
               onPressed: () {
+                //_databaseHelper.updateSchedule(widget.schedule);
+                _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'addingTasks', addingTasks);
+                _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'checkboxClickable', checkboxClickable);
+                _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'showTaskInput', showTaskInput);
+                _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'highlightedTaskIndex', highlightedTaskIndex);
+                //_saveScheduleChanges(widget.schedule);
+
                 Navigator.pop(context);
               },
             ),
@@ -655,12 +722,12 @@ class _ScheduleState extends State<Schedule> {
       IconButton(
         icon: Icon(Icons.menu),
         onPressed: () {
-          if (!_addingTasks) {
+          if (!addingTasks) {
             _showEditConfirmationDialog();
           }
         },
       ),
-      title: _isEditingTitle && _addingTasks
+      title: _isEditingTitle && addingTasks
           ? Center(
         child: TextField(
           controller: _titleController,
@@ -678,7 +745,7 @@ class _ScheduleState extends State<Schedule> {
       )
           : GestureDetector(
         onTap: () {
-          if (_addingTasks) {
+          if (addingTasks) {
             setState(() {
               _isEditingTitle = true;
             });
