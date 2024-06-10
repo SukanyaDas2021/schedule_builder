@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:schedule_builder/taskitem.dart';
 import 'package:schedule_builder/task.dart';
@@ -632,27 +633,27 @@ class _ScheduleState extends State<Schedule> {
               ? Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 2, 20, 2),
+              padding: const EdgeInsets.fromLTRB(20, 2, 20, 5),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   ElevatedButton(
                     onPressed: _restartSchedule,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.lightBlue,
                       foregroundColor: Colors.white,
-                      minimumSize: const Size(140, 40),
+                      minimumSize: const Size(125, 40),
                       textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
                     child: const Text('Edit Schedule'),
                   ),
-                  const SizedBox(width: 15),
+                  const SizedBox(width: 5),
                   ElevatedButton(
                     onPressed: _clearAllTasks,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
-                      minimumSize: const Size(140, 40),
+                      minimumSize: const Size(100, 40),
                       textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
                     child: const Text('Clear Schedule'),
@@ -677,10 +678,11 @@ class _ScheduleState extends State<Schedule> {
               ),
             ),
           Positioned(
-            bottom: 16.0,
+            bottom: 10.0,
             left: 5.0,
-            child: IconButton(
-              icon: Icon(Icons.arrow_back),
+            child: FloatingActionButton(
+              backgroundColor: Colors.purple[50],
+              focusColor: Colors.lightBlueAccent,
               onPressed: () {
                 //_databaseHelper.updateSchedule(widget.schedule);
                 _databaseHelper.updateScheduleColumnValue(widget.schedule.id, 'addingTasks', addingTasks);
@@ -691,6 +693,7 @@ class _ScheduleState extends State<Schedule> {
 
                 Navigator.pop(context);
               },
+              child: Icon(Icons.arrow_back),
             ),
           ),
         ],
@@ -708,6 +711,7 @@ class _ScheduleState extends State<Schedule> {
 
   AppBar _buildAppBar() {
     return AppBar(
+      systemOverlayStyle: SystemUiOverlayStyle.light,
       flexibleSpace: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -720,9 +724,12 @@ class _ScheduleState extends State<Schedule> {
       centerTitle: true,
       leading:
       IconButton(
-        icon: Icon(Icons.menu),
+        icon: Icon(
+          Icons.menu,
+          color: Colors.white,
+        ),
         onPressed: () {
-          if (!addingTasks) {
+          if (!addingTasks && !tasks.every((task) => task.isDone)) {
             _showEditConfirmationDialog();
           }
         },
