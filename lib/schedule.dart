@@ -636,7 +636,7 @@ class _ScheduleState extends State<Schedule> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 2, 20, 5),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
                       onPressed: _restartSchedule,
@@ -710,83 +710,89 @@ class _ScheduleState extends State<Schedule> {
     _databaseHelper.updateAppBarData(_appBarImagePath, newTitle, widget.schedule.id);
   }
 
-  AppBar _buildAppBar() {
-    return AppBar(
-      systemOverlayStyle: SystemUiOverlayStyle.light,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue, Colors.purple], // Define your gradient colors here
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+  PreferredSize _buildAppBar() {
+    double appBarHeight = MediaQuery.of(context).size.height * 0.08; //
+
+    return PreferredSize(
+      preferredSize: Size.fromHeight(appBarHeight),
+      child: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue, Colors.purple], // Define your gradient colors here
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
-      ),
-      centerTitle: true,
-      leading:
-      IconButton(
-        icon: Icon(
-          Icons.menu,
-          color: Colors.white,
-        ),
-        onPressed: () {
-          if (!addingTasks && !tasks.every((task) => task.isDone)) {
-            _showEditConfirmationDialog();
-          }
-        },
-      ),
-      title: _isEditingTitle && addingTasks
-          ? Center(
-        child: TextField(
-          controller: _titleController,
-          autofocus: true,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            hintText: 'Edit title',
+        centerTitle: true,
+        leading:
+        IconButton(
+          alignment: Alignment.centerLeft,
+          icon: Icon(
+            Icons.menu,
+            color: Colors.white,
           ),
-          onSubmitted: (newTitle) {
-            _updateTitle(newTitle);
+          onPressed: () {
+            if (!addingTasks && !tasks.every((task) => task.isDone)) {
+              _showEditConfirmationDialog();
+            }
           },
         ),
-      )
-          : GestureDetector(
-        onTap: () {
-          if (addingTasks) {
-            setState(() {
-              _isEditingTitle = true;
-            });
-          }
-        },
-        child: Center(
-          child: Text(
-            _titleController.text,
-            textAlign: TextAlign.right,
-            style: const TextStyle(fontSize:22, fontWeight: FontWeight.bold, color: Colors.white),
+        title: _isEditingTitle && addingTasks
+            ? Center(
+          child: TextField(
+            controller: _titleController,
+            autofocus: true,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              hintText: 'Edit title',
+            ),
+            onSubmitted: (newTitle) {
+              _updateTitle(newTitle);
+            },
+          ),
+        )
+            : GestureDetector(
+          onTap: () {
+            if (addingTasks) {
+              setState(() {
+                _isEditingTitle = true;
+              });
+            }
+          },
+          child: Center(
+            child: Text(
+              _titleController.text,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontSize:22, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
           ),
         ),
-      ),
-      actions: [
-        const SizedBox(width: 10),
-        if (_appBarImagePath.isNotEmpty)
-          GestureDetector(
-            onTap: _showImageOptionsDialog,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.file(
-                File(_appBarImagePath),
-                fit: BoxFit.cover,
-                width: 50, height: 50,
+        actions: [
+          const SizedBox(width: 10),
+          if (_appBarImagePath.isNotEmpty)
+            GestureDetector(
+              onTap: _showImageOptionsDialog,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.file(
+                  File(_appBarImagePath),
+                  fit: BoxFit.cover,
+                  width: 50, height: 50,
+                ),
               ),
+            )
+          else
+            IconButton(
+              icon: Icon(Icons.add_photo_alternate_outlined, size: 30, color: Colors.grey),
+              onPressed: _pickAppBarImage,
             ),
-          )
-        else
-          IconButton(
-            icon: Icon(Icons.add_photo_alternate_outlined, size: 30, color: Colors.grey),
-            onPressed: _pickAppBarImage,
-          ),
-      ],
+        ],
+      ),
     );
   }
 
