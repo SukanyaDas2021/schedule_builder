@@ -150,7 +150,10 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton (
+        backgroundColor: Colors.lightBlue[50],
+        tooltip: "Create new schedule",
+        elevation: 10.0,
         onPressed: () {
           showDialog(
             context: context,
@@ -176,7 +179,13 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
             },
           );
         },
-        child: Icon(Icons.add),
+        child: Container(
+          child: Icon(
+            Icons.add,
+            color: Colors.blue[900],
+            size: 40,
+          ),
+        ),
       ),
     );
   }

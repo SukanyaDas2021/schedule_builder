@@ -64,6 +64,9 @@ class _BottomNavBarScreenState extends State<BottomNavBarScreen> {
             label: 'Tasks',
           ),
         ],
+        backgroundColor: Colors.blue[50], // Add background color to the bottom navigation bar
+        elevation: 2.0, // Add elevation for a raised effect
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }
